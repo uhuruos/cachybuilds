@@ -1,0 +1,6 @@
+libgpg-error
+libgcrypt
+fakeroot
+jq
+mc
+cachyos/pacman

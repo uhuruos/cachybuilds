@@ -1,0 +1,17 @@
+liburcu
+linux-firmware
+e2fsprogs
+jfsutils
+xfsprogs
+reiserfsprogs
+btrfs-progs
+nilfs-utils
+f2fs-tools
+gptfdisk
+cryptsetup
+testdisk
+ddrescue
+parted
+partclone
+partimage
+brotli

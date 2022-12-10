@@ -1,0 +1,16 @@
+#
+# Uhuru OS package list
+#
+# infoengine1337
+# Twitter: @infoengine1337
+
+lxc
+vagrant
+open-vm-tools
+#kubelet
+#ceph
+
+#-- Docker --#
+trivy
+###dockerscan
+###grype

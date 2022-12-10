@@ -1,0 +1,16 @@
+audit
+pam
+keyutils
+krb5
+xmlsec
+nspr
+nss
+libtirpc
+libsodium
+libp11-kit
+p11-kit
+libsecret
+tpm2-tss
+gnupg
+gpgme
+libssh2

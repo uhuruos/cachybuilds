@@ -1,0 +1,12 @@
+intltool
+pkgconf
+libzip
+libarchive
+libtool
+autoconf
+autoconf-archive
+automake
+autogen
+mlocate
+protobuf
+protobuf-c

@@ -1,0 +1,119 @@
+# I used https://github.com/soracqt/myarch as a reference.
+# Thanks to soracqt(https://github.com/soracqt).
+# Thanks to soracqt(https://github.com/infoengine1337).
+
+name: Running Jobs Cachy RevA_Oct21
+
+on:
+  pull_request:
+    branches: [ dev ]
+
+  schedule:
+    - cron: '0 1,3,6,9,11,13,16,19,21,23 1,3,5,7,9,11,13,15,17,19,21,24,26 * 1-6'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: manjarolinux/base
+      volumes:
+        - /home/runner/work/uhurudir/uhurudir:/tmp/uhurudir
+      options: "--privileged"
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Fasttrack
+        run: |
+          pacman-mirrors --fasttrack
+
+      - name: Install Required Packages
+        run: |
+          pacman -Syyu --noconfirm procps zsh curl rsync wget git make fakeroot sudo python3 base-devel cmake ninja qt5-base arch-install-scripts pyalpm squashfs-tools libisoburn dosfstools
+
+      - name: Install CachyOS keys and Fetch cachyos-mirrorlist
+        run: |
+          wget https://mirror.cachyos.org/repo/x86_64/cachyos/cachyos-keyring-2-1-any.pkg.tar.zst && \
+          pacman --noconfirm -U cachyos-keyring-2-1-any.pkg.tar.zst
+          wget -P /etc/pacman.d/ -O cachyos-mirrorlist https://raw.githubusercontent.com/CachyOS/CachyOS-PKGBUILDS/master/cachyos-mirrorlist/cachyos-mirrorlist
+
+      - name: Install Arch keys
+        run: |
+          wget -O archlinux-keyring-latest.pkg.tar.zst https://archlinux.org/packages/core/any/archlinux-keyring/download/ && \
+          pacman --noconfirm -U archlinux-keyring-latest.pkg.tar.zst
+          wget -P /etc/pacman.d/ -O arch-mirrorlist https://raw.githubusercontent.com/archlinux/archlinux-docker/master/rootfs/etc/pacman.d/mirrorlist
+
+      - name: Install Archstrike keys and Fetch archstrike-mirrorlist
+        run: |
+          wget -O archstrike-keyring-20200930-2-any.pkg.tar.xz https://mirror.archstrike.org/x86_64/archstrike/archstrike-keyring-20200930-2-any.pkg.tar.xz && \
+          pacman --noconfirm -U archstrike-keyring-20200930-2-any.pkg.tar.xz
+          wget -P /etc/pacman.d/ -O archstrike-mirrorlist https://www.archstrike.org/mirrorlist/generate?p=https&t=official,community
+
+      - name: Install BlackArch keys and Fetch blackarch-mirrorlist
+        run: |
+          wget https://www.blackarch.org/keyring/blackarch-keyring.pkg.tar.xz && \
+          pacman --noconfirm -U blackarch-keyring.pkg.tar.xz
+          wget -P /etc/pacman.d/ -O blackarch-mirrorlist https://blackarch.org/blackarch-mirrorlist
+
+      - name: Install chaotic keys and Fetch chaotic-aur-mirrorlist
+        run: |
+          pacman-key --recv-key FBA220DFC880C036 --keyserver keyserver.ubuntu.com
+          pacman-key --lsign-key FBA220DFC880C036
+          wget -O chaotic-keyring.pkg.tar.zst https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst
+          pacman --noconfirm -U chaotic-keyring.pkg.tar.zst
+          wget -P /etc/pacman.d/ -O chaotic-mirrorlist https://raw.githubusercontent.com/chaotic-aur/pkgbuild-chaotic-mirrorlist/main/mirrorlist
+
+      - name: Populate keyrings
+        run: |
+          pacman-key --init
+          pacman-key --populate
+        
+      - name: Build UhuruOS RevA_Oct21
+        run: ./build.sh --noloopmod --cleanup RevA_Oct21
+        
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: cachy_FIFA22
+          path: out
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+
+      - uses: actions/checkout@v3
+
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y.%m.%d')_FIFA22"
+
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: cachy_FIFA22
+
+      - name: Install jq
+        run: sudo apt install jq
+
+      - name: Upload to anonfiles
+        id: uploadiso
+        run: echo "::set-output name=url::Please Download ISO from releases or $(curl -s --retry 3 -F file=@`echo CachyOS*.img` https://api.anonfiles.com/upload | jq .data.file.url.short )"
+
+      - name: Split ISO Images
+        run: |
+          ls CachyOS*.img | xargs -n1 -I{} bash -c "split -b600m {} {}_splitted_ ; rm {}"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.date.outputs.date }}
+          name: ${{ steps.date.outputs.date }}
+          body: ${{steps.uploadiso.outputs.url}}
+          draft: false
+          prerelease: false
+          files: |
+            CachyOS*.img_splitted_*

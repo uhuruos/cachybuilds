@@ -1,0 +1,9 @@
+dbus
+libx11
+libxi
+libxkbcommon-x11
+xf86-input-libinput
+xkeyboard-config
+libxau
+xdg-user-dirs
+xdg-utils

@@ -1,0 +1,10 @@
+libassuan
+libnghttp2
+libpsl
+libcap-ng
+libcap
+inetutils
+openbsd-netcat
+libopensmtpd
+opensmtpd
+smbclient

@@ -1,0 +1,16 @@
+# mkinitcpio preset file for the 'linux-amd-raven' package
+
+ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux"
+
+COMPRESSION="zstd"
+
+PRESETS=('default' 'fallback')
+
+default_config="/etc/mkinitcpio.conf"
+default_image="/boot/vmlinuz-linux.img"
+#default_options=""
+
+fallback_config="/etc/mkinitcpio.conf"
+fallback_image="/boot/vmlinuz-linux-fallback.img"
+fallback_options="-S autodetect"

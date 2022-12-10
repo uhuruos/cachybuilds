@@ -1,0 +1,4 @@
+export USER=$LOGNAME
+export HOME=/home/$LOGNAME
+
+vncserver -geometry 1280x800 -depth 24 -name remote-desktop :1

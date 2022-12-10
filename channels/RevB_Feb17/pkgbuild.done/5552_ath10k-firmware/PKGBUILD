@@ -1,0 +1,22 @@
+# Maintainer: Maximilian Luz <luzmaximilian@gmail.com>
+
+pkgname=ath10k-firmware
+pkgver=20220608
+pkgrel=1
+arch=(any)
+pkgdesc="Firmware override for Surface devices with QCA6174 ATH10K WiFi Chip"
+url="http://github.com/linux-surface/ath10k-firmware-override"
+license=('custom')
+optdepends=('linux-surface')
+
+source=(
+    board-2-surface.bin
+    ath10k.conf
+)
+sha256sums=('SKIP'
+            'SKIP')
+
+package(){
+    install -Dm644 "board-2-surface.bin" "${pkgdir}/usr/lib/firmware/ath10k/QCA6174/hw3.0/board-2-surface.bin"
+    install -Dm644 "ath10k.conf" "${pkgdir}/usr/lib/modprobe.d/ath10k.conf"
+}

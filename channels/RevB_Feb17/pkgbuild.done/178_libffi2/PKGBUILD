@@ -1,0 +1,29 @@
+_pkgbasename=libffi
+pkgname=libffi2
+pkgver=3.0.4
+pkgrel=7
+pkgdesc="A portable, high level programming interface to various calling conventions (ABI version 2)"
+arch=('i686' 'x86_64')
+url="https://github.com/libffi/libffi"
+license=('MIT')
+checkdepends=('dejagnu' 'glibc')
+options=('!libtool')
+source=(https://gcc.gnu.org/pub/libffi/libffi-${pkgver}.tar.gz)
+md5sums=('eea52a0f7929182da1f393d43ed231c5')
+
+build(){
+    cd "${srcdir}/${_pkgbasename}-${pkgver}"
+    ./configure --prefix=/usr
+    make
+}
+
+package(){
+    cd "${srcdir}/${_pkgbasename}-${pkgver}"
+    make DESTDIR="${pkgdir}" install
+
+    mv "${pkgdir}/usr/lib/libffi.a" "${pkgdir}/usr/lib/libffi2.a"
+    mv "${pkgdir}/usr/lib/libffi.so" "${pkgdir}/usr/lib/libffi2.so"
+    rm -rf "${pkgdir}/usr/lib/pkgconfig" "${pkgdir}/usr/share"
+
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

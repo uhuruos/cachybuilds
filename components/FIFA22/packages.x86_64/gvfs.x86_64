@@ -1,0 +1,7 @@
+libsasl
+libldap
+libmtp
+gvfs
+gvfs-smb
+gvfs-mtp
+mtpfs

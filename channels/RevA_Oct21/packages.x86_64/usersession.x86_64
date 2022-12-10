@@ -1,0 +1,13 @@
+#
+# Uhuru OS package list
+#
+# infoengine1337
+# Twitter: @infoengine1337
+
+pambase
+manjaro-asian-input-support-fcitx5
+ttf-sourcecodepro-nerd
+adobe-source-code-pro-fonts
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji

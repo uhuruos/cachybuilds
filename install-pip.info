@@ -1,0 +1,27 @@
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+pysaml2 7.1.0 requires defusedxml, which is not installed.
+pysaml2 7.1.0 requires pyOpenSSL, which is not installed.
+pysaml2 7.1.0 requires xmlschema>=1.2.1, which is not installed.
+
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+pysaml2 7.1.0 requires pyOpenSSL, which is not installed.
+pysaml2 7.1.0 requires xmlschema>=1.2.1, which is not installed.
+mitmproxy 9.0.1 requires asgiref>=3.2.10, which is not installed.
+mitmproxy 9.0.1 requires Brotli>=1.0, which is not installed.
+mitmproxy 9.0.1 requires flask>=1.1.1, which is not installed.
+mitmproxy 9.0.1 requires h11>=0.11, which is not installed.
+mitmproxy 9.0.1 requires h2>=4.1, which is not installed.
+mitmproxy 9.0.1 requires hyperframe>=6.0, which is not installed.
+mitmproxy 9.0.1 requires kaitaistruct>=0.10, which is not installed.
+mitmproxy 9.0.1 requires ldap3>=2.8, which is not installed.
+mitmproxy 9.0.1 requires mitmproxy_wireguard>=0.1.6, which is not installed.
+mitmproxy 9.0.1 requires msgpack>=1.0.0, which is not installed.
+mitmproxy 9.0.1 requires passlib>=1.6.5, which is not installed.
+mitmproxy 9.0.1 requires publicsuffix2>=2.20190812, which is not installed.
+mitmproxy 9.0.1 requires pyOpenSSL>=22.1, which is not installed.
+mitmproxy 9.0.1 requires pyperclip>=1.6.0, which is not installed.
+mitmproxy 9.0.1 requires ruamel.yaml>=0.16, which is not installed.
+mitmproxy 9.0.1 requires sortedcontainers>=2.3, which is not installed.
+mitmproxy 9.0.1 requires urwid>=2.1.1, which is not installed.
+mitmproxy 9.0.1 requires wsproto>=1.0, which is not installed.
+mitmproxy 9.0.1 requires zstandard>=0.11, which is not installed.

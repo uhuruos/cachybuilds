@@ -1,0 +1,14 @@
+#
+# UhuruOS package list
+#
+# infoengine1337
+# github : infoengine1337
+#
+# (c) 2019-2023 Fascode Network.
+#
+
+linux519
+linux519-headers
+
+broadcom-wl-dkms
+

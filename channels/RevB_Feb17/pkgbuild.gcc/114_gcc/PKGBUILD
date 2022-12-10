@@ -1,0 +1,509 @@
+# toolchain build order: linux-api-headers->(acl->tzdata->...->filesystem)->...->perl->zlib->(...)->binutils->glibc->gcc
+# NOTE:   valgrind   requires rebuilt with each major glibc version
+# NOTE:   libtool    requires rebuilt with each new gcc version
+# --enable-host-libstdcxx='-static-libgcc -Wl,Bstatic,-lstdc++,-Bdynamic -lm'
+
+# ANNOUNCE: WELCOME
+
+    # kernelconfig (gentoo,rhel(ibm))
+    #       Global-1 :  Jaroslav Škarvada <jskarvad@redhat.com> 
+    #       Global-2 :  Denis Dupeyron <calchan@gentoo.org>
+    #     Contributor:  Michael Crawford (ali3nx/xartin) <mcrawford@eliteitminds.com>
+    #     Contributor:  Shane Peelar (InBetweenNames) <lookatyouhacker@gmail.com>
+    #     Contributor:  Yamada Hayao <hayao@fascode.net>
+
+    # ld.gold, GCC and Go BugTracker
+    #   Administrator:  Ian Lance Taylor <iant at google dot com>
+
+    # gentoo (common,)
+    #       Global-1 :  Gentoo Virtualization Project <soc-mentors@gentoo.org>
+    #                          "" <soc-@gentoo.org> if you want to join contribute them
+    #       Global-2 :  Gentoo Virtualization Project <virtualization@gentoo.org>
+    #   Administrator:  Alice Ferrazzi <alicef@gentoo.org>
+    #     Maintainer :  Michal Gorny <mgorny@gentoo.org>
+    #     Contributor:  Joonas Nillola <juippis@gentoo.org>
+
+    # gcc (CachyOS)
+    #     Maintainer :  Peter Jung & CachyOS <admin@ptr1337.dev>
+    #     Maintainer :  Vladislav Nepogodin <nepogodin.vlad@gmail.com>
+
+    # gentoo toolchain.eclass (actually active ~2021)
+    #  Co-Maintainer :  Fabian Groffen <grobian@gentoo.org>
+    #     Maintainer :  Michael Haubenwallner <michael.haubenwallner@salomon.at>
+    #     Contributor:  Denis Dupeyron <calchan@gentoo.org>
+
+    # gentoo gcc.eclass
+    #  Co-Maintainer :  Mike Pagano <mpagano@gentoo.org>
+    #     Maintainer :  Sam James <sam@gentoo.org>
+    #     Contributor:  Alfredo Tupone <tupone@gentoo.org>
+
+    # old days all
+    #     Maintainer :  Giancarlo Razzolini <grazzolini@archlinux.org>
+    #     Maintainer :  Fernando Ortiz <nandub+arch@nandub.info>
+    #     Contributor:  Alexander F. Rødseth <xyproto@archlinux.org>
+
+    # MinGW{xx}-GMP (shared -> static)
+    #     Maintainer :  Christoph Reiter <reiter.christoph@gmail.com>
+    #     Maintainer :  Alexey Pavlov <Alexpux@gmail.com>
+
+pkgname=(gcc)
+pkgver=$(date +%s)
+pkgrel=$(date +%Y%m%d)
+
+_perlver=5.37.5
+_zlibver=1.2.13
+_gmpver=6.2.99
+_gmpsnapshot=20221117121717
+_mpfrver=4.1.1
+_libmpcver=1.2.1
+_islver=0.25
+_binutilsver=2.39
+_glibcver=2.36
+_libffiver=3.4.4
+_gccver=13
+_gccsnapshot=20221113
+
+##--- triplets Marker of GMP compatible
+
+# should ( 'apple-{darwin,tvos,ios...}' | '$$$-windows-msvc' | 'mingw64' | 'mingw32' |
+#          '^{net,free,open}bsd' | '{$$$-,}^linux-*' | 'sun-solaris' | 'unknown-haiku' |
+#          'unknown-uefi' | 'unknown-bios' |
+#          'fuchsia' | '$$$-vxworks' | 'fortanix-unknown-sgx' )
+# put but sometimes strings you write will conflict with '$(uname -i)' inplace.
+
+CHOST='x86_64-pc-linux-gnu'
+DUPLET_MACH='x86_64-pc-linux-gnu'
+
+_prefixdir=usr
+_bindir=${_prefixdir}/bin
+_libdir=${_prefixdir}/lib/gcc/${DUPLET_MACH}/${pkgver%%+*}
+
+_gensconfflags=(
+    --exec-prefix=/${_prefixdir} \
+    --host=${CHOST} \
+    --build=${DUPLET_MACH} \
+    --target=${DUPLET_MACH} \
+    --with-sysroot
+)
+
+_sharedconfflags=(
+    --disable-static
+    --enable-shared
+)
+
+_staticconfflags=(
+    --disable-shared
+    --enable-static
+)
+
+_multilibconfflag=(
+    --enable-multilib
+)
+
+_cxxasmconfflags=(
+    --disable-assembly
+)
+
+_cxxcxaconfflags=(
+    --disable-__cxa_atexit
+)
+
+_allocaconfflags=(
+    --disable-alloca
+)
+
+_ltoptionconfflags=(
+    --disable-lto --disable-pic --disable-pie \
+    --disable-linker-build-id
+)
+
+_gccconfflags=(
+    --with-arch='core2' --with-arch32='pentium-m' \
+    --with-static-standard-libraries \
+    --without-included-gettext \
+    --enable-checking=release \
+    --disable-bootstrap \
+    --disable-fast-install
+)
+
+## triplets Marker of GMP compatible
+
+url=https://ftp.fu-berlin.de/unix/languages/gcc/snapshots/
+arch=($(uname -m))
+groups=(${DUPLET_MACH}-gcc)
+license=(GPL PerlArtistic LGPL FDL custom liberal)
+checkdepends=('linux-api-headers>=4.10' tzdata filesystem
+              sh coreutils wget bzip2 lrzip zip autogen autoconf texinfo sharutils m4 gettext
+              'bison>=3' flex automake cmake perl zlib findutils gawk zig gmp mpfr libmpc libisl binutils 'glibc>=2.26'
+              dejagnu inetutils doxygen python libxcrypt)
+optdepends=('lib32-gcc-libs:       x86 32-bit runtime libraries shipped by GCC'
+            'lib32-glibc:          x86 GNU C Library (32-bit)'
+            'lib32-rust-libs:      x86 32-bit target and libraries for Rust'
+            'rustup:               The Rust toolchain (and installer)'
+            'dtrace:               need to build'
+            'locale:               need to patch from BSD4.3'
+            'getcwd:               some linux had lack of execute'
+            'op@time:              Should following NetBSD as standard'
+            're@fold_grind_T:      unknown'
+            'op@inc:               not sure opcodes (DO NOT SET "-mfused-madd(R8000)" "-fomit-framepointer" "")'
+            'op@pack:              unknown opcodes (Please refer with macOS\Darwin sourcecode...)'
+            'op@require_errors:    undefined since some decades'
+            'op@sprintf2:          incorrect reformat with return address by zero (or 0x00001000)'
+            'uni@goto:             was lost (legendary too old BASIC), '
+            'uni@latin2:           Please following IBM\AIX or Sun4u\'
+            'lib@cygwin:           not essential (but needed for DOS-compatible)'
+            'socket:               unknown (-lthread? -lpthread?)'
+            'lib@Net@netent:       ................................................. skipped'
+            'lib@Net@protoent:     ................................................. skipped'
+            'lib@Net@servent:      ................................................. skipped'
+            'lib@Unicode@testnorm: Do not care about'
+            'lib@warnings@op:      Not functional'
+            'debuginfod:           for debuginfod server/client functionality'
+            'git:                  the fast distributed version control system')
+options=(!emptydirs)
+
+source=(https://gmplib.org/download/snapshot/gmp-next/gmp-${_gmpver}-${_gmpsnapshot}.tar.zst
+        https://www.mpfr.org/mpfr-current/mpfr-${_mpfrver}.tar.bz2
+        https://ftp.gnu.org/gnu/mpc/mpc-${_libmpcver}.tar.gz
+        https://libisl.sourceforge.io/isl-${_islver}.tar.bz2
+        https://ftp.fu-berlin.de/unix/languages/gcc/snapshots/${_gccver}-${_gccsnapshot}/gcc-${_gccver}-${_gccsnapshot}.tar.xz
+        perlbin.sh
+        perlbin.csh
+        perlbin.fish
+        detect-old-perl-modules.sh
+        detect-old-perl-modules.hook
+        c89
+        c99)
+sha512sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+build(){
+    install -dm755 build-{shared,static,traditional}
+
+    if [ ! -d gcc ]; then
+        ln -snf ${srcdir}/gcc-${_gccver}-${_gccsnapshot} ${srcdir}/gcc
+    fi
+
+    ln -snf ${srcdir}/gmp-${_gmpver}-${_gmpsnapshot} ${srcdir}/gcc/gmp
+    ln -snf ${srcdir}/mpfr-${_mpfrver} ${srcdir}/gcc/mpfr
+    ln -snf ${srcdir}/mpc-${_libmpcver} ${srcdir}/gcc/libmpc
+    ln -snf ${srcdir}/isl-${_islver} ${srcdir}/gcc/isl
+
+    cd gcc
+
+    # disable libphobos test to avoid segfaults and other unfunny ways to waste my time
+    sed -e '/maybe-check-target-libphobos \\/d' -i ${srcdir}/gcc/libphobos/Makefile.in
+ 
+    # Do not install libiberty (Use with from binutils)
+    sed -e 's/install_to_$(INSTALL_DEST) //' -i ${srcdir}/gcc/libiberty/Makefile.in
+
+    #if [[ "${DUPLET_MACH}" == "${CHOST}" ]]; then
+        # configure with same dirs
+        #sed -e 's/@host_subdir@/@prefix@/g' -i ${srcdir}/gcc/libgcc/Makefile.in
+    #fi
+
+    # fix build with glibc 2.26
+    sed -e 's:\bstruct ucontext\b:ucontext_t:g' -i $(grep --include '*.[ch]' --include '*.cc' -lre '\bstruct ucontext\b')
+    sed -e 's:\bstruct sigaltstack\b:stack_t:g' -i $(grep --include '*.[ch]' --include '*.cc' -lre '\bstruct sigaltstack\b')
+
+    # Arch Linux installs x86_64 libraries /lib
+    case "${CARCH}" in
+        'x86_64') sed -e '/m64=/ s/lib64/lib/' -i ${srcdir}/gcc/gcc/config/i386/t-linux64 ;;
+    esac
+
+    ## libbacktrace
+    sed -e 's|2.2.7a|2.4.7-dirty|g' -i ${srcdir}/gcc/libbacktrace/configure
+    sed -e 's|1.3134|2.4.7|g' -i ${srcdir}/gcc/libbacktrace/configure
+
+    # place none to inhibit wrong EXTRA_FLAGS '-funwind-tables' '-frandom-seed=\$@'
+    # fail compiling libbacktrace if does not
+    find . -type f -name configure | xargs -n1 sed -e 's|-funwind-tables||' -i
+    find . -type f -name configure | xargs -n1 sed -e 's|-frandom-seed=\$@||' -i
+    find . -type f -name configure | xargs -n1 sed -e 's|$CFLAGS $CPPFLAGS|$CFLAGS|g' -i
+
+    # place none to inhibit wrong CFLAGS(CXXFLAGS) '-g', double '-flto -flto' (recommend: -Oz)
+    find . -type f -name configure | xargs -n1 sed -e 's|="-g -O2|="-Wno-deprecated|g' -i
+    find . -type f -name configure | xargs -n1 sed -e 's|="-g|="-Wno-deprecated|g' -i
+    find . -type f -name configure | xargs -n1 sed -e 's|-O2|-Wno-deprecated|' -i
+
+    rm -rf ${srcdir}/gcc/ltversion.m4
+    cat << EOF > ${srcdir}/gcc/ltversion.m4
+# ltversion.m4 -- version numbers			-*- Autoconf -*-
+#
+#   Copyright (C) 2004 Free Software Foundation,
+#   Inc.
+#   Written by Scott James Remnant, 2004
+#
+# This file is free software; the Free Software Foundation gives
+# unlimited permission to copy and/or distribute it, with or without
+# modifications, as long as this notice is preserved.
+
+# @configure_input@
+
+# serial 4245 ltversion.m4
+# This file is part of GNU Libtool
+
+m4_define([LT_PACKAGE_VERSION], [2.4.7-dirty])
+m4_define([LT_PACKAGE_REVISION], [2.4.7])
+
+AC_DEFUN([LTVERSION_VERSION],
+[macro_version='2.4.7-dirty'
+macro_revision='2.4.7'
+_LT_DECL(, macro_version, 0, [Which release of libtool.m4 was used?])
+_LT_DECL(, macro_revision, 0)
+])
+
+EOF
+
+    # CAUTION: compile and out two autoconf&automake at first !
+    # [(*).m4] Override local autoconf version 'AC_PREREQ(VERSION)' while configure.ac:34 AC_INIT()
+    local _AC_PREREQ=$(sed -n '/AC_PREREQ/p' ${srcdir}/gcc/libcc1/aclocal.m4 | grep -o [0-9].[0-9][0-9] | tr -d '\n')
+    local __GCC_AUTOCONF_VERSION=$(sed -n '/_GCC_AUTOCONF_VERSION/p' ${srcdir}/gcc/config/override.m4 | tr -d 'm4' | grep -o [0-9].[0-9][0-9] | tr -d '\n')
+    local _GCC_AUTOCONF_VERSION=$(sed -n '/AC_AUTOCONF_VERSION/p' ${srcdir}/gcc/libcc1/aclocal.m4 | tr -d 'm4' | grep -o [0-9].[0-9][0-9] | tr -d '\n')
+    local _am__api_version=$(sed -n '/am__api_version/p' ${srcdir}/gcc/libcc1/configure | grep -o [0-9].[0-9][0-9] | tr -d '\n')
+    find . -type f -name '*.m4' | xargs -n1 sed -ri "/AC_PREREQ/s/${_AC_PREREQ}/$(autoconf --version | head -n1 | tr ' ' '\n' | tail -n1)/g"
+    find . -type f -name '*.m4' | xargs -n1 sed -ri "/AC_AUTOCONF_VERSION/s/${_GCC_AUTOCONF_VERSION}/$(autoconf --version | head -n1 | tr ' ' '\n' | tail -n1)/g"
+    find . -type f -name '*.m4' | xargs -n1 sed -ri "/_GCC_AUTOCONF_VERSION/s/${__GCC_AUTOCONF_VERSION}/$(autoconf --version | head -n1 | tr ' ' '\n' | tail -n1)/g"
+    find . -type f -name '*.m4' | xargs -n1 sed -ri "/autoconf/s/${_GCC_AUTOCONF_VERSION}/$(autoconf --version | head -n1 | tr ' ' '\n' | tail -n1)/g"
+
+    ## https://gcc.gnu.org/bugzilla/show_bug.cgi?id=51206
+    # GCC Bugzilla – Bug 51206 - Building Cross-Compiler for Linux/x86_64 multilibs fails due to FLAGS_FOR_TARGET
+    ## http://research.google.com/pubs/author37504.html?s_tact=C43202QW
+    # Ian Lance Taylor <ian at airs dot com> <iant at google dot com> <iant at golang dot org>
+    #if [[ ${DUPLET_MACH} == ${CHOST} ]]; then
+        #sed -e 's|^build_tooldir=${tooldir}|build_tooldir=/usr|g' -i ${srcdir}/gcc/configure
+        #if [[ ! -d /usr/sys-include ]]; then
+            #sed -e 's|-isystem $(build_tooldir)/sys-include||' -i ${srcdir}/gcc/configure
+            #sed -e 's|$(build_tooldir)/include|$(build_tooldir)/lib/zig/libc/include/generic-glibc/|g' -i ${srcdir}/gcc/configure
+        #fi
+    #fi
+
+    # Changing for local version AC_MACROS
+    # DO NOT CONFUSE WITH 'autoupdate -v' or 'automake -v --add-missing'
+    GREP='grep -E' autoreconf -v -f -i
+
+    local PREREQUIRES &&
+    for PREREQUIRES in zlib gmp mpfr libmpc isl
+    do
+        cd ${srcdir}/gcc/${PREREQUIRES}
+
+        # Changing for local version AC_MACROS
+        # DO NOT CONFUSE WITH 'autoupdate -v' or 'automake -v --add-missing'
+        GREP='grep -E' autoreconf -v -f -i || printf "\n\nError in ${PREREQUIRES}.\n"
+    done
+
+    # CAUTION: compile and out two autoconf&automake at first !
+    # [configure.(*)] Override local autoconf version 'AC_PREREQ(VERSION)' while configure.ac:34 AC_INIT()
+    local _AC_PREREQ=$(sed -n '/AC_PREREQ/p' ${srcdir}/gcc/libcc1/aclocal.m4 | grep -o [0-9].[0-9][0-9] | tr -d '\n')
+    local __GCC_AUTOCONF_VERSION=$(sed -n '/_GCC_AUTOCONF_VERSION/p' ${srcdir}/gcc/config/override.m4 | tr -d 'm4' | grep -o [0-9].[0-9][0-9] | tr -d '\n')
+    local _GCC_AUTOCONF_VERSION=$(sed -n '/AC_AUTOCONF_VERSION/p' ${srcdir}/gcc/libcc1/aclocal.m4 | tr -d 'm4' | grep -o [0-9].[0-9][0-9] | tr -d '\n')
+    local _am__api_version=$(sed -n '/am__api_version/p' ${srcdir}/gcc/libcc1/configure | grep -o [0-9].[0-9][0-9] | tr -d '\n')
+
+    find . -type f -name configure | xargs -n1 sed -ri "/am__api_version/s/${_am__api_version}/$(find /usr/bin/automake-* | sort -n -r | grep -o [.0-9] | tr -d '\n')/g"
+    find . -type f -name configure.ac | xargs -n1 sed -ri "/AC_PREREQ/s/${_AC_PREREQ}/$(autoconf --version | head -n1 | tr ' ' '\n' | tail -n1)/g"
+}
+
+package_gcc(){
+    pkgdesc='The GNU Compiler Collection with a set of programs to assemble and manipulate binary and object files'
+    provides=(libbacktrace
+          lib32-gcc-libs gcc-libs
+          libgcc libitm libvtv libgomp libada libgfortran
+          libobjc libgo
+          libphobos libquadmath libatomic libsanitizer
+          libstdc++-v3 libubsan libasan libtsan liblsan
+          libstdc++5
+          liboffloadmic libtermcap winsup
+          libgo.so libgfortran.so libgphobos.so
+          libubsan.so libasan.so libtsan.so liblsan.so)
+    replaces=(libffi libstdc++5
+          gnat-gpl gcc-c++ gcc-jit gcc-fortran
+          gcc-objc gcc-objc++ gcc-ada
+          gcc-go gcc-lto
+          lib32-gcc-libs gcc-libs ${pkgname}-multilib)
+
+    ## gcc-gcj gcc-gcj-ecj gcc-gcj-compat gjdoc
+    ## java-gcj-compat java-environment java-runtime
+
+    ## -Wno-error=format-diag,format-nonliteral,format-security, \
+    ## free-nonheap-object, implicit-function-declaration, \
+    ## pedantic, unused-result, unused-parameter, \
+    ## maybe-uninitialized,missing-template-keyword, declaration-after-statement ;
+
+    ###
+    ### we truly need
+    ###     (gnat-gpl)
+    ###                -> (lto-plugin) liblto_plugin.so ->
+    ### (configure-gcc) auto-host.h -> tconfig.h ->
+    ### (some other) libiberty.a -> libcody.a -> libdecnumber.a ->
+    ###          ../gmp/       
+    ###                  ../libiberty/cp-demangle.c
+    ###          ../gcc/
+    ###                  ../libcpp/internal.h
+    ###                  ../libcpp/directives.cc
+    ###  libmpfr.a -> (gmp)
+    ###               ^~~~~compile with cpp
+    ###                   -> libdep.a (isl)
+    ###                       -> libisl.a
+    ###                          ^~~~~need 'pod2man' and 'libgcc_s.so.1'
+    ###           -> libgmp.a                     -> libcpp.a -> 
+    ###              ^~~~~g++ based on gcc-3.4.6     ^~~~~cpp
+    ###           -> libbacktrace.a
+    ### -> fix-includes -> intl -> gcc :
+    ###    gcc -> c -> c-family
+    ###           -> cp -> jit -> fortran -> objc/c++ -> ada -> go -> lto
+    ###                                                  ^~~~~need 'gnu-gnat'
+    ###        (  -> cloog -> crystal (old days) )
+    ###
+
+    ###        --libdir=/${_prefixdir}/lib \
+    ###        --libexecdir=/${_prefixdir}/lib \
+    ###        --mandir=/${_prefixdir}/share/man \
+    ###        --infodir=/${_prefixdir}/share/info \
+
+    ## See ltoptions.m4,
+    ## enable-languages=c,c++,jit,fortran,objc,objc++,(ada),(go),lto
+
+    cd ${srcdir}/build-shared
+    #CC="$(which zig) cc -target $(uname -m)-linux-gnu" \
+    #CXX="$(which zig) c++ -target $(uname -m)-linux-gnu" \
+    LD_PRELOAD='/usr/lib/libstdc++.so' \
+        ${srcdir}/gcc/configure \
+            "${_gensconfflags[@]}" \
+            "${_sharedconfflags[@]}" \
+            "${_staticconfflags[@]}" \
+            "${_multilibconfflags[@]}" \
+            "${_cxxasmconfflags[@]}" \
+            "${_cxxcxaconfflags[@]}" \
+            "${_allocaconfflags[@]}" \
+            "${_ltoptionconfflags[@]}" \
+            "${_gccconfflags[@]}"
+
+    nice -n -20 make -j1
+
+    #touch ${srcdir}/cmdlist.txt
+    #for def_alternatemake in XXXXX
+    #do
+    #    unset LIBRARY_PATH CPATH C_INCLUDE_PATH PKG_CONFIG_PATH CPLUS_INCLUDE_PATH INCLUDE
+    #    #ABI=whatever ${srcdir}/gcc/configure "${_confflags[@]}"
+    #    echo "Trying ${def_alternatemake}, please check." >>  ${srcdir}/cmdlist.txt
+    #    make -s clean
+    #    make -s configure-target-${def_alternatemake} || echo "Error in ${def_alternatemake}." >> ${srcdir}/cmdlist.txt || true
+    #    #sleep 11
+    #    #make -s all-target-${def_alternatemake}
+    #done
+
+    # libgcc gcc libitm libvtv libgomp libada libgfortran libatomic libsanitizer
+    #ok {gcc,libstdc++-v3,libffi,newlib,zlib,fastjar,libbacktrace,libatomic,libphobos,libgcc,libada,libgfortran,libobjc,libgo,libitm,libgomp,liboffloadmic,libsanitizer,libvtv,libtermcap,libgloss,winsup}
+    #make -s gcc-check-target
+    #make -s check
+    #make -s all-binutils
+    #make -s all-ld
+    #make -s all-target-{common,headers,libs,plugin,lto-plugin,lto-wrapper,driver,man,info,po,libcc1,cpp,cafexeclibLTLIBRARIES,toolexeclibLTLIBRARIES,toolexeclibDATA,nodist_fincludeHEADERS,gfor_cHEADERS,libiberty,gcc,fixincludes,mkheaders,gcc-ar,libgcc,shared,libmudflap,libitm,libssp,libvtv,libgomp,libada,libgfortran,exec-am,gotools,libgo,libjava,libquadmath,libatomic,libsanitizer}
+
+    #make DESTDIR=${pkgdir} \
+    #    install-target-{common,headers,libs,plugin,lto-plugin,lto-wrapper,driver,man,info,po,libcc1,libstdc++-v3,cpp,cafexeclibLTLIBRARIES,toolexeclibLTLIBRARIES,toolexeclibDATA,nodist_fincludeHEADERS,gfor_cHEADERS,libiberty,gcc,fixincludes,mkheaders,gcc-ar,libgcc,shared,libmudflap,libitm,libvtv,libgomp,libada,libgfortran,exec-am,gotools,libgo,libquadmath,libatomic,libsanitizer}
+
+    #make -s gnatlib_and_tools
+    #make -s {ada,c++,fortran,objc,go,lto}.install-{common,headers,libs,plugin,man,info,po}
+
+    nice -n -20 make check
+    LD_PRELOAD='/usr/lib/libstdc++.so' nice -n -20 make DESTDIR=${pkgdir} install
+
+    # strip target binaries
+    find ${pkgdir}/${_prefixdir}/lib/gcc/${DUPLET_MACH}/ ${pkgdir}/${_prefixdir}/${DUPLET_MACH}/lib \
+         -type f -and \( -name \*.a -or -name \*.o \) \
+         -exec objcopy -R .comment -R .note -R .debug_info -R .debug_aranges \
+             -R .debug_pubnames -R .debug_pubtypes -R .debug_abbrev -R .debug_line \
+             -R .debug_str -R .debug_ranges -R .debug_loc '{}' \;
+
+    # strip host binaries
+    find ${pkgdir}/${_prefixdir}/bin/ ${pkgdir}/${_prefixdir}/lib/gcc/${DUPLET_MACH}/ -type f -and \( -executable \) -exec strip '{}' \;
+
+    # many packages expect this symlink
+    ln -snf ../usr/bin/cpp ${pkgdir}/lib
+    ln -snf gcc ${pkgdir}/${_bindir}/cc
+    ln -snf gcc ${pkgdir}/${_bindir}/gnatgcc
+
+    # POSIX conformance launcher scripts for c89 and c99
+    install -Dm755 ${srcdir}/c89 ${pkgdir}/${_bindir}/c89
+    install -Dm755 ${srcdir}/c99 ${pkgdir}/${_bindir}/c99
+
+    # byte-compile python libraries
+    python -m compileall ${pkgdir}/${_prefixdir}/share/gcc-${pkgver%%+*}/
+    python -O -m compileall ${pkgdir}/${_prefixdir}/share/gcc-${pkgver%%+*}/
+
+    #install -d "${pkgdir}/${_prefixdir}/lib32/"
+    #mv ${pkgdir}/${_prefixdir}/lib/32/ ${pkgdir}/${_prefixdir}/lib32
+
+    install -dm755 ${pkgdir}/usr/share/gdb/auto-load/usr/lib
+    mv ${pkgdir}/usr/lib/*-gdb.py ${pkgdir}/usr/share/gdb/auto-load/usr/lib/
+
+    # make documentation
+    make -C ${CHOST}/libstdc++-v3/doc DESTDIR=${pkgdir} doc-man-doxygen
+
+    # install the libstdc++ man pages
+    make -C ${CHOST}/libstdc++-v3/doc DESTDIR=${pkgdir} doc-install-man
+
+    # Install Runtime Library Exception
+    install -d ${pkgdir}/${_prefixdir}/share/licenses/${pkgname}/
+    ln -snf /${_prefixdir}/share/licenses/gcc-libs/RUNTIME.LIBRARY.EXCEPTION ${pkgdir}/${_prefixdir}/share/licenses/${pkgname}/
+
+    make -s check-install
+}
+
+##   gcc47   :  https://aur.archlinux.org/fastgcc
+# Maintainer :        Chris Severance aur.severach aATt spamgourmet dott com
+# Contributor:        Vladislav Tyulbashev <vtyulb@vtyulb.ru>
+# Contributor:        12qu <jrmcornish@gmail.com>
+# Contributor:        Allan McRae <allan@archlinux.org>
+# Contributor:        mosra <mosra@centrum.cz>
+##   other   :  {gcc.eclass(gentoo),ghdl-gcc-git,gccrs-git,gdc-git}
+# Maintainer :        Adrien Prost-Boucle <adrien.prost-boucle@laposte.net>
+# Maintainer :        Vladislav Nepogodin <nepogodin.vlad@gmail.com>
+# Contributor:        João Figueiredo & chaotic-aur <islandc0der@chaotic.cx>
+# Maintainer :        Filipe Laíns (FFY-01) <lains@archlinux.org>
+# Maintainer :        Daniel Kozak (kozzi) <kozzi11@gmail.com>
+# Contributor:        Mihails Strasuns <public@dicebot.lv>
+# Contributor:        Moritz Maxeiner <moritz@ucworks.org>
+# Contributor:        Jerome Berger <jeberger@free.fr>
+# Contributor:        Jesus Alvarez <jeezusjr@gmail.com>
+# Contributor:        Allan McRae <allan@archlinux.org>
+# Contributor:        Elijah Stone <elronnd@elronnd.net>
+## toolchain :  https://github.com/archlinux/svntogit-community/blob/packages/aarch64-linux-gnu-gcc/trunk/PKGBUILD
+# Maintainer :        Anatol Pomozov <anatol.pomozov@gmail.com>
+# Maintainer :        Eli Schwartz <eschwartz@archlinux.org>
+# Maintainer :        Bartłomiej Piotrowski <bpiotrowski@archlinux.org>
+##  fastgcc  :  https://aur.archlinux.org/fastgcc
+# Maintainer :        Janez Žemva <janezz55@gmail.com>
+# Contributor:        Allan McRae <allan@archlinux.org>
+# Contributor:        Daniel Kozak <kozzi11@gmail.com>
+##     gcc   :  https://aur.archlinux.org/gcc-git
+# Maintainer :        Peter Jung & CachyOS <admin@ptr1337.dev>
+# Maintainer :        João Figueiredo & chaotic-aur <islandc0der@chaotic.cx>
+## gcc-java  :  https://gist.github.com/bbidulock/6968e85305fe4009cdc5ad5f037cae09
+##           :  https://gist.github.com/bbidulock/28ad6422b87155f256093356e4a728c5
+# Maintainer:         Sebastiaan Lokhorst <sebastiaanlokhorst@gmail.com>
+# Contributor:        frankspace
+# Contributor:        Renan Manola <rmanola@gmail.com>
+# Contributor:        Stefan Husmann <stefan-husmann@t-online.de>
+# Contributor:        Joey Dumont <joey.dumont@gmail.com>
+# Contributor:        Sven-Hendrik Haase <sh@lutzhaase.com>
+# Contributor:        Allan McRae <allan@archlinux.org>
+# Contributor:        Pierre Bourdon <delroth@gmail.com>
+# Contributor:        larsrh <hupel@in.tum.de>
+
+# cc cpp m4 gmp mpfr mpc tls? zlib libisl
+# outside no: libart-lgpl libxtst antlr2
+# inside  no: binutils ld glibc (gcc-ar gcc) libgphobos libmpc libmpx boehm-gc libf2c libjava
+
+# vim: ts=2 sw=2 et:

@@ -1,0 +1,27 @@
+pkgname=vte3-ng
+_vtever=0.70.0
+pkgver=20220828
+pkgrel=428
+pkgdesc="Enhanced Virtual Terminal Emulator widget for use with GTK3 (patched with support for fullwidth emoji)"
+arch=('x86_64')
+license=('LGPL')
+options=('!emptydirs')
+depends=('libsysprof-capture' 'sysprof' 'fribidi' 'gobject-introspection' 'vala' 'gtk-doc' 'gperf' 'gtk3' 'vte-common')
+checkdepends=('linux-api-headers' 'python' 'pcre2' 'gnutls')
+makedepends=('intltool' 'meson' 'ninja')
+url="https://gitlab.gnome.com/GNOME/vte"
+source=(https://github.com/GNOME/vte/archive/refs/tags/${_vtever}.tar.gz)
+sha256sums=('SKIP')
+provides=(vte3)
+replaces=(vte3)
+
+build(){
+    cd "vte-${_vtever}"
+    meson build --prefix=/usr
+    ninja -C build
+}
+
+package(){
+    cd "vte-${_vtever}"
+    DESTDIR="${pkgdir}" ninja -C build install
+}

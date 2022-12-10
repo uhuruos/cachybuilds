@@ -1,0 +1,28 @@
+#
+# Uhuru OS package list
+#
+# infoengine1337
+# Twitter: @infoengine1337
+
+#-- macchanger --#
+macchanger
+
+#-- Tor --#
+tor
+obfs4proxy
+nyx
+
+#-- packet capture tools --# 
+tcpdump
+nmap
+wireshark-cli
+
+#-- port scanner --#
+nmap
+masscan
+rustscan
+
+#-- tunneling tools --#
+chisel
+sshuttle
+#netsh

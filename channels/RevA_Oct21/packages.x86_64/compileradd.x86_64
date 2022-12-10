@@ -1,0 +1,13 @@
+#
+# Uhuru OS package list
+#
+# infoengine1337
+# Twitter: @infoengine1337
+
+nasm
+lld
+musl
+mold
+mercurial
+rust
+pcsx2

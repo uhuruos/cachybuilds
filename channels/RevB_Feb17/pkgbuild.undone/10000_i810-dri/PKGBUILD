@@ -1,0 +1,186 @@
+# Maintainer: ConnorBehan <connor.behan@gmail.com>
+# Contributor: ReaperX7 (California)
+# https://www.linuxquestions.org/questions/slackware-14/unofficial-mesa-7-11-build-script-for-slackware-907245/
+
+pkgbase=mesa-dri1
+pkgname=('unichrome-dri' 'i810-dri' 'mach64-dri' 'mga-dri' 'r128-dri' 'savage-dri' 'sis-dri' 'tdfx-dri'
+         'i915-dri' 'i965-dri' 'nouveau-dri' 'r300-dri' 'r600-dri' 'svga-dri' 'swrast-dri')
+pkgver=7.11.2
+pkgrel=13
+arch=('x86_64')
+checkdepends=('m4' 'autoconf-archive' 'autoconf' 'pkgconf' 'bison' 'flex')
+makedepends=('xorgproto' 'libdrm>=2.4.26' 'libxxf86vm>=1.1.1' 'libxdamage>=1.1.3' 'expat>=2.0.1' 'gawk' 'libx11>=1.4.3' 'libxt>=1.1.1' 
+             'gcc-libs>=4.6.1' 'python' 'libxml2' 'imake' 'llvm' 'udev')
+url="http://mesa3d.sourceforge.net"
+license=('custom')
+source=(ftp://ftp.freedesktop.org/pub/mesa/older-versions/7.x/${pkgver}/MesaLib-${pkgver}.tar.bz2
+	LICENSE
+	mesa-dri1-symbol-visibility.patch
+	mesa-dri1-python3.patch)
+md5sums=('SKIP'
+         'SKIP'
+         'SKIP'
+         'SKIP')
+
+build(){
+    cd "${srcdir}"/Mesa-7.11.2
+    patch -Np1 -i ../mesa-dri1-symbol-visibility.patch
+    patch -Np1 -i ../mesa-dri1-python3.patch
+    autoreconf -vfi
+    ./configure --prefix=/usr \
+        --with-dri-driverdir=/usr/lib/xorg/modules/dri \
+        --with-dri-drivers=unichrome,i810,mach64,mga,r128,savage,sis,tdfx,i915,i965,nouveau,r300,r600,svga,swrast \
+        --with-gallium-drivers=i915,i965,nouveau,r300,r600,svga,swrast \
+        --with-x \
+        --enable-gallium-llvm \
+        --enable-gallium-egl \
+        --enable-glx-tls \
+        --with-driver=dri \
+        --enable-openvg \
+        --enable-xcb \
+        --enable-xorg \
+        --enable-motif \
+        --disable-glut \
+        --enable-gles1 \
+        --enable-gles2 \
+        --enable-egl \
+        --enable-texture-float \
+        --disable-shared-dricore ;
+
+    make
+}
+
+package_unichrome-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for S3 Graphics/VIA Unichrome"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/unichrome DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/unichrome-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/unichrome-dri/"
+}
+
+package_i810-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for Intel i810"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/i810 DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/i810-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/i810-dri/"
+}
+
+package_mach64-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for ATI Mach64"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/mach64 DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/mach64-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/mach64-dri/"
+}
+
+package_mga-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for Matrox"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/mga DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/mga-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/mga-dri/"
+}
+
+package_r128-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for ATI Rage128"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/r128 DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/r128-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/r128-dri/"
+}
+
+package_savage-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for S3 Sraphics/VIA Savage"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/savage DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/savage-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/savage-dri/"
+}
+
+package_sis-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for SiS"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/sis DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/sis-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/sis-dri/"
+}
+
+package_tdfx-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for 3dfx"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/tdfx DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/tdfx-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/tdfx-dri/"
+}
+
+package_i915-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for Intel i915"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/i915 DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/i915-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/i915-dri/"
+}
+
+package_i965-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for Intel i965"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/i965 DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/i965-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/i965-dri/"
+}
+
+package_nouveau-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for Nvidia Old"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/nouveau DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/nouveau-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/nouveau-dri/"
+}
+
+package_r300-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for ATI Rage300"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/r300 DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/r300-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/r300-dri/"
+}
+
+package_r600-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for ATI Rage600"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/r600 DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/r600-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/r600-dri/"
+}
+
+package_svga-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for svga"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/svga DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/svga-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/svga-dri/"
+}
+
+package_swrast-dri(){
+  depends=('expat' 'gawk' 'libdrm' 'gcc-libs')
+  pkgdesc="Mesa DRI drivers for swrast"
+
+    make -C ${srcdir}/?esa-*/src/mesa/drivers/dri/swrast DESTDIR="${pkgdir}" install
+    install -m755 -d "${pkgdir}/usr/share/licenses/swrast-dri"
+    install -m644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/swrast-dri/"
+}

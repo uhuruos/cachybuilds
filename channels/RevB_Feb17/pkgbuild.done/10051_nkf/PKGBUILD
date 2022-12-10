@@ -1,0 +1,25 @@
+# Contributor: noonov <noonov@gmail.com>
+
+pkgname=nkf
+pkgver=2.1.5
+pkgrel=3
+pkgdesc="A yet another kanji code converter among networks, hosts and terminals"
+arch=('i486' 'i686' 'x86_64')
+url="https://osdn.net/projects/nkf/"
+license=('custom')
+checkdepends=('glibc')
+source=("https://osdn.net/dl/nkf/nkf-${pkgver}.tar.gz")
+md5sums=('SKIP')
+b2sums=('SKIP')
+
+build(){
+    cd ${srcdir}/${pkgname}-${pkgver}
+    sed -i "/^CFLAGS/s|$| ${CFLAGS}|" Makefile
+    make
+}
+
+package(){
+    cd ${srcdir}/${pkgname}-${pkgver}
+    install -D -m755 nkf               "${pkgdir}/usr/bin/nkf"
+    install -D -m644 nkf.1             "${pkgdir}/usr/share/man/man1/nkf.1"
+}

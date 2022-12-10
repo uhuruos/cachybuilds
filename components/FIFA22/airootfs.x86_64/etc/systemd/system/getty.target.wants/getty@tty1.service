@@ -1,0 +1,52 @@
+
+#  SPDX-License-Identifier: LGPL-2.1+
+#
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+
+[Unit]
+Description=Serial Getty on %I
+Documentation=man:agetty(8) man:systemd-getty-generator(8)
+Documentation=http://0pointer.de/blog/projects/serial-console.html
+ConditionPathExists=/dev/%I
+After=systemd-user-sessions.service getty-pre.target
+
+# If additional gettys are spawned during boot then we should make
+# sure that this is synchronized before getty.target, even though
+# getty.target didn't actually pull it in.
+Before=getty.target
+IgnoreOnIsolate=yes
+
+# IgnoreOnIsolate causes issues with sulogin, if someone isolates
+# rescue.target or starts rescue.service from multi-user.target or
+# graphical.target.
+Conflicts=rescue.service
+Before=rescue.service
+
+[Service]
+ExecStart==-/bin/bash -c "test -e /run/lock/login.lock && /sbin/agetty --login-options '-p -- \u' -L --keep-baud 6000000,3250000,3000000,1843200,921600,750000,500000,460800,230400,115200,57600,38400,28800,19200,14400,9600,4800,2400,1200,600,300,110 --noclear %I $TERM || { /sbin/touch /run/lock/login.lock; /sbin/agetty --login-options '-p -- \u' -L --keep-baud 6000000,3250000,3000000,1843200,921600,750000,500000,460800,230400,115200,57600,38400,28800,19200,14400,9600,4800,2400,1200,600,300,110 --noclear %I $TERM; }"
+Type=idle
+Restart=always
+RestartSec=0
+UtmpIdentifier=%I
+StandardInput=%I
+StandardOutput=%I
+TTYPath=/dev/%I
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+KillMode=process
+IgnoreSIGPIPE=no
+SendSIGHUP=yes
+
+# Unset locale for the console getty since the console has problems
+# displaying some internationalized messages.
+UnsetEnvironment=LANG LANGUAGE LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT LC_IDENTIFICATION
+
+[Install]
+WantedBy=getty.target
+DefaultInstance=tty1

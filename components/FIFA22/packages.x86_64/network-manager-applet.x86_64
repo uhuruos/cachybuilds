@@ -1,0 +1,8 @@
+glib2
+libnm
+networkmanager
+network-manager-applet
+networkmanager-openvpn
+vpnc
+openconnect
+openvpn

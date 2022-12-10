@@ -1,0 +1,17 @@
+# Maintainer: Yufan You <ouuansteve at gmail>
+
+pkgname=font-lxgw-wenkai
+pkgver=1.235.2
+pkgrel=1
+pkgdesc="An open-source Chinese font derived from Fontworks' Klee One."
+arch=('any')
+url='https://github.com/lxgw/LxgwWenKai'
+license=('custom:OFL')
+source=("https://github.com/lxgw/LxgwWenKai/releases/download/v${pkgver}/lxgw-wenkai-v${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+package(){
+    cd "lxgw-wenkai-v${pkgver}"
+    install -d "${pkgdir}/usr/share/fonts/TTF"
+    install -m644 *.ttf "${pkgdir}/usr/share/fonts/TTF"
+}

@@ -1,0 +1,52 @@
+#!/bin/sh
+
+mount --mkdir -o "${opts}" "${flg}" "${dev}" "${mnt}"
+
+run_hook() {
+    if [ ! -z "${arch}" ]; then
+        arch="$(uname -m)"
+    fi
+    if [ ! -z "${archisobasedir}" ]; then
+        archisobasedir="arch"
+    fi
+    if [ ! -z "${archisodevice}" ]; then
+        archisodevice="/dev/disk/by-label/${archisolabel}"
+        mount --mkdir ${archisodevice} /run/archiso/bootmnt -o ro,defaults
+    fi
+
+    if [ "${checksum}" = "y" ]; then
+        if [ -f "/run/archiso/bootmnt/${archisobasedir}/${arch}/airootfs.sha512" ]; then
+            msg ":: Self-test requested, please wait..."
+            if _verify_checksum; then
+                msg "Checksum is OK, continue booting."
+            else
+                echo "ERROR: one or more files are corrupted"
+                echo "see /tmp/checksum.log for details"
+                launch_interactive_shell
+            fi
+        else
+            echo "ERROR: checksum=y option specified but ${archisobasedir}/${arch}/airootfs.sha512 not found"
+            launch_interactive_shell
+        fi
+    fi
+
+    if [ "${verify}" = "y" ]; then
+        if [ -f "/run/archiso/bootmnt/${archisobasedir}/${arch}/airootfs.sfs.sig" ]; then
+            sigfile="airootfs.sfs.sig"
+        elif [ -f "/run/archiso/bootmnt/${archisobasedir}/${arch}/airootfs.erofs.sig" ]; then
+            sigfile="airootfs.erofs.sig"
+        else
+            echo "ERROR: GPG signature of rootfs(.sfs/.erofs) not found in ${archisobasedir}/${arch}/"
+            launch_interactive_shell
+        fi
+    fi
+
+    if [ -f "/run/archiso/bootmnt/${archisobasedir}/${arch}/airootfs.sfs" ]; then
+        mount --mkdir /run/archiso/bootmnt/${archisobasedir}/${arch}/airootfs.sfs /run/archiso/airootfs -o rw,defaults
+    elif [ -f "/run/archiso/bootmnt/${archisobasedir}/${arch}/airootfs.erofs" ]; then
+        mount --mkdir /run/archiso/bootmnt/${archisobasedir}/${arch}/airootfs.erofs /run/archiso/airootfs -o rw,defaults
+    else
+        echo "ERROR: no root file system image found"
+        launch_interactive_shell
+    fi   
+}

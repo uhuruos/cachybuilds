@@ -1,0 +1,57 @@
+# Maintainer: Mike Tigas <mike AT tig DOT as>
+# Contributor: Shawn Nock <nock@nocko.se>
+# Contributor: Nicolas Pouillard <nicolas.pouillard@gmail.com>
+# Contributor: Lukas Fleischer <archlinux at cryptocrack dot de>
+# Contributor: simo <simo@archlinux.org>
+
+srcname=tor
+srcver=0.4.7.10
+srcrel=1
+pkgname=tor-ng
+pkgver=122.05.250
+pkgrel=428
+pkgdesc='Anonymizing overlay network.'
+arch=('any')
+url='http://www.torproject.org/'
+license=('BSD')
+depends=('libevent' 'libseccomp')
+checkdepends=('ca-certificates')
+makedepends=('bash')
+optdepends=('torsocks')
+provides=('tor')
+backup=('etc/tor/torrc'
+        'etc/tor/torrc-dist'
+)
+install='tor.install'
+
+source=("https://www.torproject.org/dist/${srcname}-${srcver}.tar.gz"
+        'torrc'
+        'tor.service')
+
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP')
+
+validpgpkeys=('SKIP')
+
+build(){
+    cd "${srcdir}/${srcname}-${srcver}"
+
+    ./configure --prefix="/usr" --sysconfdir="/etc" --localstatedir="/var"
+    make
+}
+
+package(){
+    cd "${srcdir}/${srcname}-${srcver}"
+
+    DESTDIR="${pkgdir}" make install
+
+    install -dm755 "${pkgdir}/var/lib/tor"
+
+    mv "${pkgdir}/etc/tor/torrc.sample" "${pkgdir}/etc/tor/torrc-dist"
+    install -Dm644 "${srcdir}/torrc" "${pkgdir}/etc/tor/torrc"
+
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${srcname}/LICENSE"
+
+    install -Dm644 "${srcdir}/tor.service" "${pkgdir}/usr/lib/systemd/system/tor.service"
+}

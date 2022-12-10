@@ -1,0 +1,38 @@
+#
+# UhuruOS package list
+#
+# infoengine1337
+# github : infoengine1337
+#
+# (c) 2019-2023 Fascode Network.
+#
+#
+# kernel list for i686
+#
+# Enter the kernel package and header package name in the kernel package list.
+#
+#[kernel name]               [kernel filename]               [mkinitcpio profile]
+#
+cachyos                      vmlinuz-linux-cachyos           linux-cachyos
+core                         vmlinuz-linux                   linux
+lts                          vmlinuz-linux-lts               linux-lts
+zen                          vmlinuz-linux-zen               linux-zen
+hardened                     vmlinuz-linux-hardened          linux-hardened
+
+
+# Arch Linux Trusted User repository
+rt                           vmlinuz-linux-rt                linux-rt
+rt-lts                       vmlinuz-linux-rt-lts            linux-rt-lts
+
+
+# Manjaro kernels
+linux515                     vmlinuz-5.15-x86_64             linux515
+linux518                     vmlinuz-5.18-x86_64             linux518
+linux519                     vmlinuz-5.19-x86_64             linux519
+linux60                      vmlinuz-6.0-x86_64              linux60
+linux61                      vmlinuz-6.1-x86_64              linux61
+linux62                      vmlinuz-6.2-x86_64              linux62
+linux63                      vmlinuz-6.3-x86_64              linux63
+
+# (pseudo-alias) uhurukernel
+uhurukernel                  vmlinuz-6.0-rt-x86_64           linux60-rt

@@ -1,0 +1,79 @@
+# Maintainer: Kenny Strawn <Kenny[dot]Strawn[at]gmail[dot]com>
+
+pkgname=calamares-ng
+srcname=calamares
+srcver=3.3.0-alpha2
+srcrel=5
+pkgver=122.05.250
+pkgrel=428
+pkgdesc='Distribution-independent installer framework (stable version)'
+arch=('i486' 'i686' 'x86_64' 'aarch32' 'aarch64')
+license=('LGPL')
+url="https://github.com/calamares/calamares"
+provides=('calamares-git' 'calamares' 'calamares-dev')
+replaces=('calamares-git' 'calamares' 'calamares-dev')
+depends=('python-jsonschema' 'python-yaml' 'boost-libs' 'boost' 'extra-cmake-modules' 'hwinfo' 'udisks2' 'kpmcore' 'squashfs-tools' 'kcoreaddons')
+checkdepends=('linux-api-headers' 'python' 'libatasmart' 'icu' 'mkinitcpio' 'systemd' 'squashfs-tools' 'squashfuse' 'rsync')
+makedepends=('cmake' 'ninja' 'yaml-cpp' 'parted' 'fatresize')
+optdepends=('qt5-tools' 'libpwquality' 'git' 'solid' 'partitionmanager' 'polkit-qt5'
+            'kconfig' 'ki18n' 'kio' 'kdbusaddons' 'kparts' 'kpackage' 'kiconthemes'
+            'qt5-xmlpatterns' 'qt5-translations' 'qt5-svg' 'gtk-update-icon-cache' 'qt5-location'
+            'appstream-qt' 'plasma-framework')
+
+# backup=('usr/share/calamares/modules/bootloader.conf'
+#         'usr/share/calamares/modules/displaymanager.conf'
+#         'usr/share/calamares/modules/initcpio.conf'
+#         'usr/share/calamares/modules/unpackfs.conf')
+
+source=(
+    "https://github.com/calamares/calamares/releases/download/v${srcver}/calamares-${srcver}.tar.gz"
+)
+sha256sums=(
+    'SKIP'
+)
+
+prepare() {
+    cd "${srcdir}/calamares-${srcver}"
+    sed -i -e "s|\${CALAMARES_VERSION_MAJOR}.\${CALAMARES_VERSION_MINOR}.\${CALAMARES_VERSION_PATCH}|${srcver}|g" CMakeLists.txt
+    sed -i -e "s|CALAMARES_VERSION_RC 1|CALAMARES_VERSION_RC 0|g" CMakeLists.txt
+    sed -i -e "s|default|gentoov|g" src/branding/CMakeLists.txt
+
+    cd "${srcdir}/calamares-${srcver}"
+    #sed -i -e 's/"Install configuration files" OFF/"Install configuration files" ON/' CMakeLists.txt
+}
+
+
+build(){
+    cd "${srcdir}/calamares-${srcver}"
+    LDFLAGS="${LDFLAGS} -ludev" cmake -S . -B build -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=/usr \
+          -DCMAKE_INSTALL_LIBDIR=lib \
+          -DWITH_KF5DBus:BOOL=OFF \
+          -DWITH_KF5Crash:BOOL=OFF \
+          -DWITH_PYTHON:BOOL=ON \
+          -DWITH_PYTHONQT:BOOL=OFF \
+          -DWITH_PARTITONMANAGER:BOOL=OFF \
+          -DWITH_APPSTREAM:BOOL=OFF \
+          -DINSTALL_CONFIG:BOOL=OFF \
+          -DINSTALL_POLKIT:BOOL=OFF \
+          -DBoost_NO_BOOST_CMAKE=ON \
+          -DSKIP_MODULES="dracut dracutlukscfg \
+                          dummyprocess dummypython dummypythonqt dummycpp \
+                          finishedq welcomeq keyboardq userq summaryq license localeq notesqml oemid \
+                          openrcdmcryptcfg packagechooserq initramfs initramfscfg \
+                          plymouthcfg plasmalnf services-openrc \
+                          tracking webview interactiveterminal"
+    nice -n -3 cmake --build build --parallel 3
+}
+
+package(){
+    cd "${srcdir}/calamares-${srcver}"
+    cmake DESTDIR="${pkgdir}" --build build --target install
+
+    # rename services-systemd back to services
+    #mv "${pkgdir}/usr/lib/calamares/modules/services-systemd" "$pkgdir/usr/lib/calamares/modules/services"
+    #mv "${pkgdir}/usr/share/calamares/modules/services-systemd.conf" "${pkgdir}/usr/share/calamares/modules/services.conf"
+    #sed -i -e 's/-systemd//' "${pkgdir}/usr/lib/calamares/modules/services/module.desc"
+    #sed -i -e 's/-systemd//' "${pkgdir}/usr/share/calamares/settings.conf"
+}

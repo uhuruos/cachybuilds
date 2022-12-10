@@ -1,0 +1,17 @@
+netpbm
+hidapi
+logrotate
+libpng
+png++
+libtiff
+librsvg
+libxrandr
+libxcursor
+libjpeg-turbo
+libxcb
+libxdamage
+libxcomposite
+libxext
+xcb-util
+xcb-util-xrm
+xcb-util-image

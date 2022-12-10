@@ -1,0 +1,246 @@
+# Maintainer: silencesuzuka <makeworldgentoo@gmail.com>
+# Maintainer: Steven De Bondt <egnappah at gmail dot com>
+# Maintainer: Josip Ponjavic <josipponjavic at gmail dot com>
+# Contributor: Joan Figueras <ffigue at gmail dot com>
+# Contributor: Torge Matthies <openglfreak at googlemail dot com>
+# Contributor: Jan Alexander Steffens (heftig) <heftig at archlinux dot org>
+
+pkgbase=linux
+_kernel_mainver=5
+_kernel_ltsrel=${_kernel_mainver}.15.75
+_kernelname="${pkgbase#linux}"
+_srcname=${pkgbase}-${_kernel_ltsrel}
+pkgname=("linux" "linux-headers" "linux-docs")
+pkgver=14
+pkgrel=428
+arch=('x86_64')
+url="https://www.kernel.org/"
+license=('GPL2')
+checkdepends=('gawk')
+makedepends=('guile')
+optdepends=('clang' 'llvm' 'gcc' 'lld' 'binutils' 'libelf' 'dtc' 'pahole'
+    'bc' 'bison' 'flex' 'coreutils' 'perl' 'git' 'xmlto' 'docbook-xsl' 'kmod' 'inetutils'
+    'cpio' 'libarchive' 'tar' 'zlib' 'gzip' 'xz' 'lz4' 'lzo' 'lzop' 'zstd')
+options=('!strip')
+
+source=("https://cdn.kernel.org/pub/linux/kernel/v${_kernel_mainver}.x/${_srcname}.tar.xz"
+       'config_SLCK.param'
+       'linux.preset'
+       'linux.install')
+sha256sums=('SKIP'
+          'SKIP'
+          'SKIP'
+          'SKIP')
+
+prepare(){
+    cd "${_srcname}"
+    cat "${srcdir}/config_SLCK.param" > ./.config
+
+    # get kernel version
+    msg2 "Preparing kernel"
+    yes "" | make prepare
+
+    # load configuration
+    msg2 "Preparing config"
+
+    ## Configure the kernel. Replace the line below with one of your choice.
+    # CLI menu for configuration
+    #make menuconfig
+    # new CLI menu for configuration
+    #make nconfig
+    # X-based configuration
+    #make xconfig
+    # using old config from previous kernel version, defaults for new options
+    #make oldconfig
+    nice -n -3 make -j1 LLVM=1 LLVM_IAS=1 olddefconfig
+    # 
+    # ... or manually edit .config
+}
+
+build(){
+    cd "${_srcname}"
+    nice -n -20 make -j1 LLVM=1 LLVM_IAS=1 LOCALVERSION= bzImage modules
+}
+
+package_linux(){
+    pkgdesc="Linux kernel with working well"
+    depends=('linux-firmware' 'mkinitcpio>=0.7')
+    optdepends=('crda: to set the correct wireless channels of your country')
+    provides=(linux-amd linux-slim linux-clang linux-vfio
+        linux-hikari linux-tkg linux-clear linux-sgx linux-tomoyo
+        linux-arch linux-lts linux-rt linux-mainline linux-libre
+        linux-cachyos linux-lqx linux-zen linux-xanmod linux-pf
+        uksmd modprove-db
+        virtualbox-host-dkms virtualbox-guest-modules-arch virtualbox-guest-modules-mainline
+        wireguard-arch
+        V4L2LOOPBACK-MODULE LINUX-ABI_VERSION
+        VIRTUALBOX-HOST-MODULES VIRTUALBOX-GUEST-MODULES WIREGUARD-MODULE KSMBD-MODULE VHBA-MODULE NTFS3-MODULE UKSMD-BUILTIN)
+    replaces=(linux-amd linux-slim linux-clang linux-vfio
+        linux-hikari linux-tkg linux-clear linux-sgx linux-tomoyo
+        linux-arch linux-lts linux-rt linux-mainline linux-libre
+        linux-cachyos linux-lqx linux-zen linux-xanmod linux-pf
+        uksmd modprove-db
+        virtualbox-host-dkms virtualbox-guest-modules-arch virtualbox-guest-modules-mainline
+        wireguard-arch
+        V4L2LOOPBACK-MODULE LINUX-ABI_VERSION
+        VIRTUALBOX-HOST-MODULES VIRTUALBOX-GUEST-MODULES WIREGUARD-MODULE KSMBD-MODULE VHBA-MODULE NTFS3-MODULE UKSMD-BUILTIN)
+    backup=("etc/mkinitcpio.d/${pkgbase}.preset")
+    install=linux.install
+
+    cd "${_srcname}"
+
+    KARCH=x86
+
+    # get kernel version
+    _kernver="$(make LOCALVERSION= kernelrelease)"
+    _basekernel=${_kernver%%-*}
+    _basekernel=${_basekernel%.*}
+
+    install -d "${pkgdir}"/{lib/modules,lib/firmware,boot}
+    make LOCALVERSION= INSTALL_MOD_PATH="${pkgdir}" modules_install
+    cp arch/$KARCH/boot/bzImage "${pkgdir}/boot/vmlinuz-linux"
+
+    # set correct depmod command for install
+    cp -f "${startdir}/${install}" "${startdir}/${install}.pkg"
+    true && install=${install}.pkg
+    sed \
+        -e "s/KERNEL_NAME=.*/KERNEL_NAME=${_kernelname}/" \
+        -e "s/KERNEL_VERSION=.*/KERNEL_VERSION=${_kernver}/" \
+        -i "${startdir}/${install}"
+
+    # install mkinitcpio preset file for kernel
+    install -Dm644 "${srcdir}/linux.preset" "${pkgdir}/etc/mkinitcpio.d/linux.preset"
+    sed \
+        -e "1s|'linux.*'|'linux'|" \
+        -e "s|ALL_kver=.*|ALL_kver=\"/boot/vmlinuz-linux\"|" \
+        -e "s|default_image=.*|default_image=\"/boot/vmlinuz-linux.img\"|" \
+        -e "s|fallback_image=.*|fallback_image=\"/boot/vmlinuz-linux-fallback.img\"|" \
+        -i "${pkgdir}/etc/mkinitcpio.d/linux.preset"
+
+    # remove build and source links
+    rm -f "${pkgdir}"/lib/modules/${_kernver}/{source,build}
+    # remove the firmware
+    rm -rf "${pkgdir}/lib/firmware"
+    # make room for external modules
+    ln -snf "../extramodules-${_basekernel}${_kernelname:--ARCH}" "${pkgdir}/lib/modules/${_kernver}/extramodules"
+    # add real version for building modules and running depmod from post_install/upgrade
+    install -d "${pkgdir}/lib/modules/extramodules-${_basekernel}${_kernelname:--ARCH}"
+    echo "${_kernver}" > "${pkgdir}/lib/modules/extramodules-${_basekernel}${_kernelname:--ARCH}/version"
+
+    # Now we call depmod...
+    depmod -b "${pkgdir}" -F System.map "${_kernver}"
+
+    # move module tree /lib -> /usr/lib
+    install -d "${pkgdir}/usr"
+    mv "${pkgdir}/lib" "${pkgdir}/usr/" 
+
+    # add vmlinuz in /usr/lib/modules/ and info for correct hook triggers
+    cp arch/${KARCH}/boot/bzImage "${pkgdir}/usr/lib/modules/${_kernver}/vmlinuz-linux"
+
+    # add System.map
+    install -Dm644 System.map "${pkgdir}/boot/System.map-${_kernver}"
+}
+
+package_linux-headers(){
+    pkgdesc="Header files and scripts for building modules for Linux kerel with working well"
+    provides=(linux-amd-headers linux-slim-headers linux-clang-headers linux-vfio-headers
+        linux-hikari-headers linux-tkg-headers linux-clear-headers linux-sgx-headers linux-tomoyo-headers
+        linux-arch-headers linux-lts-headers linux-rt-headers linux-mainline-headers linux-libre-headers
+        linux-cachyos-headers linux-lqx-headers linux-zen-headers linux-xanmod-headers linux-pf-headers)
+    replaces=(linux-amd-headers linux-slim-headers linux-clang-headers linux-vfio-headers
+        linux-hikari-headers linux-tkg-headers linux-clear-headers linux-sgx-headers linux-tomoyo-headers
+        linux-arch-headers linux-lts-headers linux-rt-headers linux-mainline-headers linux-libre-headers
+        linux-cachyos-headers linux-lqx-headers linux-zen-headers linux-xanmod-headers linux-pf-headers)
+    install -d "${pkgdir}/usr/lib/modules/${_kernver}"
+
+    cd "${_srcname}"
+    install -Dm644 Makefile \
+        "${pkgdir}/usr/lib/modules/${_kernver}/build/Makefile"
+    install -Dm644 kernel/Makefile \
+        "${pkgdir}/usr/lib/modules/${_kernver}/build/kernel/Makefile"
+    install -Dm644 .config \
+        "${pkgdir}/usr/lib/modules/${_kernver}/build/.config"
+
+    install -d "${pkgdir}/usr/lib/modules/${_kernver}/build/include"
+
+    for i in $(ls include/); do
+        cp -r include/${i} "${pkgdir}/usr/lib/modules/${_kernver}/build/include/"
+    done
+
+    # copy arch includes for external modules
+    install -d "${pkgdir}/usr/lib/modules/${_kernver}/build/arch/${KARCH}"
+    cp -r arch/x86/include "${pkgdir}/usr/lib/modules/${_kernver}/build/arch/${KARCH}/"
+
+    # copy files necessary for later builds, like nvidia and vmware
+    cp Module.symvers "${pkgdir}/usr/lib/modules/${_kernver}/build"
+    cp -r scripts "${pkgdir}/usr/lib/modules/${_kernver}/build"
+
+    # Make tmpdir for versions
+    install -d "${pkgdir}/usr/lib/modules/${_kernver}/build/.tmp_versions"
+
+    # add kernel files to headers
+    install -d "${pkgdir}/usr/lib/modules/${_kernver}/build/arch/${KARCH}/kernel"
+    cp arch/${KARCH}/Makefile "${pkgdir}/usr/lib/modules/${_kernver}/build/arch/${KARCH}/"
+    cp arch/${KARCH}/kernel/asm-offsets.s "${pkgdir}/usr/lib/modules/${_kernver}/build/arch/${KARCH}/kernel/"
+
+    # add dm headers
+    install -d "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers"
+    cp -r drivers/* "${pkgdir}/usr/lib/modules/${_kernver}/build/drivers/"
+
+    # add inotify.h and more include headers
+    install -d "${pkgdir}/usr/lib/modules/${_kernver}/build/include"
+    cp -r include/* "${pkgdir}/usr/lib/modules/${_kernver}/build/include/"
+
+    # add wireless headers
+    install -d "${pkgdir}/usr/lib/modules/${_kernver}/build/net"
+    cp -r net/* "${pkgdir}/usr/lib/modules/${_kernver}/build/net/"
+
+    # copy in Kconfig files
+    for i in $(find . -name "Kconfig*"); do
+        install -d "${pkgdir}"/usr/lib/modules/${_kernver}/build/`echo ${i} | sed 's|/Kconfig.*||'`
+        cp -r ${i} "${pkgdir}/usr/lib/modules/${_kernver}/build/${i}"
+    done
+
+    # Fix file conflict with -doc package
+    rm -rf "${pkgdir}/usr/lib/modules/${_kernver}/build/Documentation/kbuild"/Kconfig.*-*
+    rm -rf "${pkgdir}/usr/lib/modules/${_kernver}/build/Documentation/Kconfig"
+
+    # Add objtool for CONFIG_STACK_VALIDATION
+    install -d "${pkgdir}/usr/lib/modules/${_kernver}/build/tools"
+    cp -r tools/objtool "${pkgdir}/usr/lib/modules/${_kernver}/build/tools"
+
+    chown 0:0 -R "${pkgdir}/usr/lib/modules/${_kernver}/build"
+    find "${pkgdir}/usr/lib/modules/${_kernver}/build" -type d -exec chmod 755 {} \;
+    find "${pkgdir}/usr/lib/modules/${_kernver}/build" -type f -exec chmod 644 {} \;
+    
+    # strip scripts directory
+    find "${pkgdir}/usr/lib/modules/${_kernver}/build/scripts" -type f -perm -u+w 2>/dev/null | while read binary ; do
+        case "$(file -bi "${binary}")" in
+            *application/x-sharedlib*) # Libraries (.so)
+                /usr/bin/strip ${STRIP_SHARED} "${binary}";;
+            *application/x-archive*) # Libraries (.a)
+                /usr/bin/strip ${STRIP_STATIC} "${binary}";;
+            *application/x-executable*) # Binaries
+                /usr/bin/strip ${STRIP_BINARIES} "${binary}";;
+        esac
+    done
+
+    # remove unneeded architectures
+    while read modarch; do
+        rm -rf "${modarch}"
+    done <<< $(find "${pkgdir}"/usr/lib/modules/${_kernver}/build/arch/ -maxdepth 1 -mindepth 1 -type d | grep -v /x86$)
+}
+
+package_linux-docs(){
+    pkgdesc="Kernel hackers manual - HTML documentation that comes with the Linux kernel"
+
+    cd "${_srcname}"
+
+    install -d "${pkgdir}/usr/lib/modules/${_kernver}/build"
+    cp -rl Documentation "${pkgdir}/usr/lib/modules/${_kernver}/build"
+    find "${pkgdir}" -type d -exec chmod 755 {} \;
+    find "${pkgdir}" -type f -exec chmod 644 {} \;
+
+    # remove a file already in linux package
+    rm -rf "${pkgdir}/usr/lib/modules/${_kernver}/build/Documentation/DocBook/Makefile"
+}
