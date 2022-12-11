@@ -1094,7 +1094,7 @@ function make_setup_mkinitcpio() {
     local _hook
     mkdir -m 755 -p "${airootfs_dir}/etc/initcpio/hooks" "${airootfs_dir}/etc/initcpio/install"
 
-    for _hook in "archiso" ; do
+    for _hook in "archiso_loop_mnt" "archiso" ; do
         install -m 644 -- "${script_path}/system/initcpio/hooks/${_hook}" "${airootfs_dir}/etc/initcpio/hooks"
         install -m 644 -- "${script_path}/system/initcpio/install/${_hook}" "${airootfs_dir}/etc/initcpio/install"
     done
