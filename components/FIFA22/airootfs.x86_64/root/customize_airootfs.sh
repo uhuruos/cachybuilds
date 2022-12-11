@@ -319,7 +319,7 @@ done
 
 # python
 ## broken code: pyDes overpy sklearn chainer pyforest csvkit qrcode wikipedia tkinter pyrosm \
-##    publicsuffix2 pyperclip 
+##    urwid publicsuffix2 pyperclip 
 ## outdated: hmac hashlib secrets
 ## will outdated: bitcoin futures
 ## oversized: torch
@@ -329,7 +329,7 @@ for _cfg_pythontools in wheel defusedxml xmlschema Brotli zstandard \
 pyinstaller pytest pytest-asyncio pytest-cov pytest-timeout pytest-xdist pdoc \
 asgiref requests tox certifi cryptography wsproto click hypothesis parver \
 flask h11 h2 hyperframe kaitaistruct ldap3 mitmproxy_wireguard msgpack passlib \
-ruamel.yaml sortedcontainers tornado urwid typing-extensions \
+ruamel.yaml sortedcontainers tornado typing-extensions \
 pyOpenSSL h5py scipy ipython cython joblib numpy pandas \
 pytz backtrader base58 pycryptodome ecdsa datetime xlwt xlrd \
 seaborn Pillow jupyter matplotlib scikit-learn sympy nose \
