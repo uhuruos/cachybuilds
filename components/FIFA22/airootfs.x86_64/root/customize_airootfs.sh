@@ -64,12 +64,6 @@ function _dicp() { _nsudo rsync -zvAHXal --info=progress2 --devices --specials -
 # wrapper of command 'cp' for strict safety (noclobber)
 function _dicpNC() { _nsudo rsync -zvAHXal --info=progress2 --devices --specials --copy-links --no-implied-dirs --ignore-existing --chown=0:0 --chmod=D755,F644 ${@} ; }
 
-# user_check <name>
-function user_check() {
-    if [[ ! -v 1 ]]; then return 2; fi
-    getent passwd "${1}" > /dev/null
-}
-
 # Execute only if the command exists
 # run_additional_command [command name] [command to actually execute]
 function run_additional_command() {
@@ -92,47 +86,10 @@ function _groupadd() {
     cut -d ":" -f 1 < "/etc/group" | grep -qx "${1}" && return 0 || groupadd "${1}"
 }
 
-# Create a user.
-# create_user <username> <password>
-function create_user() {
-    local _username="${1-""}" _usershell="${2-""}" _password="${3-""}"
-
-    if [[ -z "${_username}" ]]; then
-        echo "User name is not specified." >&2
-        return 1
-    fi
-    if [[ -z "${_usershell}" ]]; then
-        echo "No usershell has been specified." >&2
-        return 1
-    fi
-    if [[ -z "${_password}" ]]; then
-        echo "No password has been specified." >&2
-        return 1
-    fi
-
-    if ! user_check "${_username}"; then
-        _nsudo useradd -m -s "${_usershell}" "${_username}"
-        #_nsudo usermod -U -g "${_username}" "${_username}"
-        _nsudo usermod -aG users,lp,wheel,storage,power,video,audio,input,network "${_username}"
-        #_nsudo mkdir -m 755 -p "/home/${_username}"
-        #cp -raT "/etc/skel/" "/home/${_username}/"
-        [[ -f /etc/.zshrc ]] && \cp -raT /etc/.zshrc /home/${_username}/.zshrc
-        _nsudo chmod 755 -R "/home/${_username}"
-        _nsudo chown "${_username}:${_username}" -R "/home/${_username}"
-        _nsudo echo -e "${_password}\n${_password}" | passwd "${_username}"
-    fi
-}
-
 ## Make it compatible with previous code
 unset OPTIND OPTARG arg
 
 _nsudo ldconfig
-
-# session
-session='startxfce4'
-
-# login session
-_nsudo sed -ri "s|%SESSION%|${session}|g" "/etc/skel/.xinitrc"
 
 # Enable and generate languages.
 _nsudo sed -i 's/#\(en_US\.UTF-8\)/\1/' /etc/locale.gen
@@ -151,6 +108,10 @@ if [[ ! -f "/etc/alternatives" ]]; then
     _nsudo ln -snf /etc/alternatives/nawk /usr/bin/gawk
 fi
 
+    _nsudo usermod -s "${usershell}" root
+    _nsudo useradd -m -s "${usershell}" "${username}"
+    _nsudo usermod -aG users,lp,wheel,storage,power,video,audio,input,network "${_username}"
+
 # Allow supervisor group to run as root with any command
 for _cfg_visor in "admin" "root" "wheel"
 do
@@ -158,63 +119,19 @@ do
     _nsudo sed -i 's/^#\s*\(%"${_cfg_visor}"\s\+ALL=(ALL)\s\+ALL\)/\1/' "/etc/sudoers.d/g_${_cfg_visor}" || true
 done
 
-_nsudo usermod -s "${usershell}" root
-#cp -aT /etc/skel/ /root/
 run_additional_command "xdg-user-dirs-update" "LC_ALL=C LANG=C xdg-user-dirs-update"
-_nsudo echo -e "${password}\n${password}" | passwd root
-
-# Create user
-create_user "${username}" "${usershell}" "${password}"
 
 # Set up auto login
 if [[ -f "/etc/systemd/system/getty.target.wants/getty@tty1.service" ]]; then
     _nsudo sed -ri "s|%USERNAME%|${username}|g" "/etc/systemd/system/getty.target.wants/getty@tty1.service"
 fi
 
-# Set to execute sudo without password as alter user.
-cat >> /etc/sudoers << "EOF"
-Defaults pwfeedback
-EOF
-_nsudo echo "${username} ALL=NOPASSWD: ALL" > /etc/sudoers.d/archiso
-
 # Replace shortcut list config
 if [[ "${language}" = "ja" ]]; then
     _nsudo echo 'LANG=ja_JP.UTF-8' > /etc/locale.conf
 fi
-#remove config file about live only
-#remove /etc/skel/Desktop
-#remove /root/Desktop
-#remove "/etc/skel/.config/conky/conky-live.conf"
-#remove "/etc/skel/.config/conky/conky-live-jp.conf"
-#remove "/home/${username}/.config/conky/conky-jp.conf"
 
-# Change aurorun files permission
-_nsudo chmod 755 -R "/home/${username}/.config/autostart/"* "/etc/skel/.config/autostart/"* || true
-
-# Set permission for script
-_nsudo chmod 755 -R /etc/skel/ 
-_nsudo chmod 755 -R /home/${username}/
-
-#if [[ -f /usr/bin/eselect-arc ]]; then
-#    _nsudo chmod 755 "/usr/bin/eselect-arc"
-#fi
-
-if [[ "${arch}" = "i686" ]]; then
-    _nsudo ln -snf /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist32
-fi
-
-# TUI Installer configs
-_nsudo echo "${kernel_filename}" > /root/kernel_filename
-
-# Set os name
-_nsudo sed -ri "s|%OS_NAME%|${os_name}|g" "/usr/lib/os-release"
-
-# Enable root login with SSH.
-if [[ -f "/etc/ssh/sshd_config" ]]; then
-    _nsudo sed -i 's|#\(PermitRootLogin \).\+|\1yes|' "/etc/ssh/sshd_config"
-fi
-
-# Un comment the mirror list.
+# Uncomment the mirror list.
 if [[ -f "/etc/pacman.d/mirrorlist" ]]; then
     _nsudo sed -ri "s/#Server/Server/g" "/etc/pacman.d/mirrorlist"
 fi
@@ -238,33 +155,9 @@ if [[ -e "/usr/bin/gtk-update-icon-cache" ]]; then
     done
 fi
 
-if [[ -e "/root/.automated_script.sh" ]]; then
-    _nsudo chmod 755 "/root/.automated_script.sh"
-fi
-
 # Enable graphical.
 _nsudo systemctl enable graphical.target
 _nsudo systemctl set-default graphical.target
-
-# kmscon
-if [[ -f /usr/bin/kmscon ]]; then
-    # Copy config file for getty@.service to kmsconvt@.service
-    if [[ -f "/etc/systemd/system/getty@.service.d/autologin.conf" ]]; then
-        _nsudo mkdir -p "/etc/systemd/system/kmsconvt@.service.d/"
-        cp "/etc/systemd/system/getty@.service.d/autologin.conf" "/etc/systemd/system/kmsconvt@.service.d/autologin.conf"
-    fi
-
-    # Disable default tty
-    _nsudo systemctl disable "getty@tty1" "getty@" "getty"
-    _nsudo systemctl enable "kmsconvt@tty1"
-    _nsudo systemctl enable "kmsconvt@tty2"
-
-    # Do not run setterm
-    remove /etc/profile.d/disable-beep.sh
-
-    # Run KMSCON for all tty
-    _nsudo ln -snf "/usr/lib/systemd/system/kmsconvt@" "/etc/systemd/system/autovt@"
-fi
 
 # Prevent OOMKiller, rc compatible bugs.
 #_nsudo systemctl mask systemd-binfmt
@@ -418,123 +311,6 @@ remove /etc/xdg/autostart/light-locker.desktop || true
 if type -p dconf 1>/dev/null 2>/dev/null; then
     _nsudo dconf update
 fi
-
-# gdm
-if [[ -f /usr/bin/gdm ]]; then
-    #_nsudo systemctl enable add gdm
-
-    # Replace auto login user
-    _nsudo sed -i 's|#\(WaylandEnable\)|\1|' "/etc/gdm/custom.conf"
-    _nsudo sed -ri "s|%USERNAME%|${username}|g" "/etc/gdm/custom.conf"
-
-    # Remove file for japanese input (states will moved another chance)
-    if [[ ! "${language}" = "ja" ]]; then
-
-        for _cfg_environment in "/etc/environment" "/etc/skel/.xprofile" "/home/${username}/.xprofile"
-        do
-            _nsudo sed -ri "s|^s*export GTK_IM_MODULE=.+|#export GTK_IM_MODULE=fcitx|g" "${_cfg_environment}"
-            _nsudo sed -ri "s|^s*export QT_IM_MODULE=.+|#export QT_IM_MODULE=fcitx|g" "${_cfg_environment}"
-            _nsudo sed -ri "s|^s*export XMODIFIERS=.+|#export XMODIFIERS=@im=fcitx|g" "${_cfg_environment}"
-            _nsudo sed -ri "s|^s*export GLFW_IM_MODULE=.+|#export GLFW_IM_MODULE=@im=fcitx|g" "${_cfg_environment}"
-        done
-    fi
-fi
-
-# lightdm
-if [[ -f /usr/bin/lightdm ]]; then
-    _nsudo echo -e "\nremove /etc/lightdm/lightdm.conf.d/02-autologin.conf" >> "/usr/share/calamares/final-process"
-    
-    # Enable lightdm to auto login in live session
-    _nsudo systemctl enable lightdm || false
-
-    #if [[ -d /etc/lightdm/lightdm.conf.d/ ]]; then
-        #_nsudo sed -ri "s|%USERNAME%|${username}|g" "/etc/lightdm/lightdm.conf.d/02-autologin.conf"
-
-        # Session list
-        #if [[ -f "/etc/lightdm/lightdm.conf.d/02-autologin-session.conf" ]] && cat "/etc/lightdm/lightdm.conf.d/02-autologin-session.conf" | grep "%SESSION%" 1> /dev/null 2>&1; then
-        #session_list=()
-            #while read -r session; do
-            #    session_list+=("${session}")
-            #done < <(find "/usr/share/xsessions" -type f | grep .desktop | xargs -n1 sudo -u#0 -g#0 fakeroot sed 's/.desktop//g')
-            #if (( "${#session_list[@]}" == 1)); then
-            #    session="${session_list[*]}"
-                #_nsudo sed -ri "s|%SESSION%|${session}|g" "/etc/lightdm/lightdm.conf.d/02-autologin-session.conf"
-            #elif (( "${#session_list[@]}" == 0)); then
-            #    _nsudo echo "Warining: Auto login session was not found"
-            #else
-            #    _nsudo echo "Failed to set the session.Multiple sessions were found." >&2
-            #    _nsudo echo "Please set the session of automatic login in /etc/lightdm/lightdm.conf.d/02-autologin-session.conf"
-            #    _nsudo echo "Found session: $(printf "%s " "${session_list[@]}")"
-            #    sleep 0.5
-            #    exit 1
-            #fi
-        #fi
-    #fi
-fi
-
-# sddm
-if [[ -f /usr/bin/sddm ]]; then
-    if [[ -f /etc/sddm.conf.d/autologin.conf ]]; then
-        _nsudo sed -ri "s|%USERNAME%|${username}|g" "/etc/sddm.conf.d/autologin.conf"
-    fi
-fi
-
-# qtongtk
-if [[ -f /usr/bin/qt5ct ]]; then
-    #_cfg_qt5ct_cmdline="export QT_QPA_PLATFORMTHEME="
-    _cfg_qt5ct_files=(
-        "/etc/zsh/zshenv"
-        "/etc/bash.bashrc"
-        "/etc/skel/.profile"
-        "/home/${username}/.profile"
-    )
-
-    for cfg_qt5ct_file in "${_cfg_qt5ct_files[@]}"; do
-        _nsudo mkdir -p "$(dirname "${cfg_qt5ct_file}")"
-        #touch "${cfg_qt5ct_file}"
-        #_nsudo echo "${_cfg_qt5ct_cmdline}" >> "${cfg_qt5ct_file}"
-    done
-fi
-
-#if [[ -f /usr/bin/calamares ]]; then
-#    # Create Calamares Entry
-#    if [[ -f "/etc/skel/Desktop/calamares.desktop" ]]; then
-#        cp -raT "/etc/skel/Desktop/calamares.desktop" "/usr/share/applications/calamares.desktop"
-#    fi
-#
-#    # Delete the configuration file for prevent bad plymouth conflicts.
-#    remove "/usr/share/calamares/modules/services-plymouth.conf"
-#    cp -raT "/usr/share/calamares/modules/services.conf" "/usr/share/calamares/modules/services-plymouth.conf"
-#
-#    # Calamares configs
-#
-#    # Replace the configuration file.
-#    # initcpio
-#    _nsudo sed -ri "s|%MKINITCPIO_PROFILE%|${kernel_mkinitcpio_profile}|g" /usr/share/calamares/modules/initcpio.conf
-#    # unpackfs
-#    ## {squashfs,erofs,tar.gz}
-#    _nsudo sed -ri "s|%KERNEL_FILENAME%|${kernel_filename}|g" /usr/share/calamares/modules/unpackfs.conf
-#
-#    # Remove configuration files for other kernels.
-#    #remove "/usr/share/calamares/modules/initcpio"
-#    #remove "/usr/share/calamares/modules/unpackfs"
-#
-#    # Set up calamares removeuser
-#    _nsudo sed -ri "s|%USERNAME%|${username}|g" "/usr/share/calamares/modules/removeuser.conf"
-#    # Set user shell
-#    _nsudo sed -ri "s|%USERSHELL%|${usershell}|g" "/usr/share/calamares/modules/users.conf"
-#    # Set INSTALL_DIR
-#    _nsudo sed -ri "s|%INSTALL_DIR%|${install_dir}|g" "/usr/share/calamares/modules/unpackfs.conf"
-#    # Set ARCH
-#    _nsudo sed -ri "s|%ARCH%|${arch}|g" "/usr/share/calamares/modules/unpackfs.conf"
-#
-#    # Add disabling of sudo setting
-#    _nsudo echo -e "\nremove \"remove /etc/polkit-1/rules.d/01-nopasswork.rules\"" >> "/usr/share/calamares/final-process"
-#fi
-
-# Added autologin group to auto login
-_groupadd autologin
-_nsudo usermod -aG autologin "${username}"
 
 while true
 do

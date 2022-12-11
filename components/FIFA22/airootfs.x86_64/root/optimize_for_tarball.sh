@@ -41,12 +41,6 @@ function remove() {
     for _file in "${@}"; do echo "Removing ${_file}"; rm -rf "${_file}"; done
 }
 
-# user_check <name>
-function user_check() {
-    if [[ ! -v 1 ]]; then return 2; fi
-    getent passwd "${1}" > /dev/null
-}
-
 # Execute only if the command exists
 # run_additional_command [command name] [command to actually execute]
 function run_additional_command() {
@@ -69,34 +63,11 @@ function _groupadd() {
     cut -d ":" -f 1 < "/etc/group" | grep -qx "${1}" && return 0 || groupadd "${1}"
 }
 
-# Create a user.
-# create_user <username> <password>
-function create_user() {
-    local _username="${1-""}" _password="${2-""}"
-
-    if [[ -z "${_username}" ]]; then
-        echo "User name is not specified." >&2
-        return 1
-    fi
-    if [[ -z "${_password}" ]]; then
-        echo "No password has been specified." >&2
-        return 1
-    fi
-
-    if ! user_check "${_username}"; then
-        _nsudo useradd -m -s "${_usershell}" "${_username}"
-        #_nsudo usermod -U -g "${_username}" "${_username}"
-        _nsudo usermod -aG users,lp,wheel,storage,power,video,audio,input,network "${_username}"
-        #_nsudo mkdir -m 755 -p "/home/${_username}"
-        #cp -raT "/etc/skel/" "/home/${_username}/"
-        [[ -f /etc/.zshrc ]] && \cp -raT /etc/.zshrc /home/${_username}/.zshrc
-        _nsudo chmod 755 -R "/home/${_username}"
-        _nsudo chown "${_username}:${_username}" -R "/home/${_username}"
-        _nsudo echo -e "${_password}\n${_password}" | passwd "${_username}"
-    fi
-}
-
 _nsudo ldconfig
+
+    _nsudo usermod -s "${usershell}" root
+    _nsudo useradd -m -s "${usershell}" "${username}"
+    _nsudo usermod -aG users,lp,wheel,storage,power,video,audio,input,network "${_username}"
 
 remove /etc/mkinitcpio-archiso.conf
 

@@ -5,12 +5,16 @@ libpng
 png++
 libtiff
 librsvg
+xorg-xrdb
 libxrandr
+xorg-xrandr
 libxcursor
 libjpeg-turbo
 libxcb
+libxfixes
 libxdamage
 libxcomposite
+libxcvt
 libxext
 xcb-util
 xcb-util-xrm

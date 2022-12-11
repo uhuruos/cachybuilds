@@ -82,12 +82,6 @@ function remove() { local _file
     for _file in "${@}"; do echo "Removing ${_file}" >&2; rm -rf "${_file}"; done
 }
 
-# user_check <name>
-function user_check() {
-    if [[ ! -v 1 ]]; then return 2; fi
-    getent passwd "${1}" > /dev/null
-}
-
 # Force on User Privilege
 function run_user() {
     sudo -u "${username}" -g "$(whoami)" "${@}"
@@ -179,12 +173,9 @@ function prepare_env() {
         _nsudo ln -snf "$(find /usr/x86_64-pc-linux-gnu/gcc-bin/ -name x86_64-pc-linux-gnu-gfortran -executable)" /usr/lib/gfortran
     fi
 
-    # Creating "builduser" for makepkg, aurbuild
-    if ! user_check "${username}"; then
-        _nsudo useradd -m -s "/usr/bin/zsh" "${username}"
-    fi
-
-    #_nsudo echo "${username} ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/${username}"
+    _nsudo usermod -s "${usershell}" root
+    _nsudo useradd -m -s "${usershell}" "${username}"
+    _nsudo usermod -aG users,lp,wheel,storage,power,video,audio,input,network "${_username}"
 
     # Uncomment the mirror list.
     if [[ -f /etc/pacman.d/mirrorlist ]]; then

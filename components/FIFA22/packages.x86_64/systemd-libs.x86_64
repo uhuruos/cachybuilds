@@ -1,6 +1,6 @@
 hwloc
+mtdev
 libmd
-libev
 libnotify
 procps-ng
 psmisc

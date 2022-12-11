@@ -9,6 +9,7 @@ libtirpc
 libsodium
 libp11-kit
 p11-kit
+polkit
 libsecret
 tpm2-tss
 gnupg
