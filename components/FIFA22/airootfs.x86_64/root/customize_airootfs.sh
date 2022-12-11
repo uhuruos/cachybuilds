@@ -362,3 +362,7 @@ fi
 #        pacman-key --refresh-keys --keyserver "${_cfg_gpgtools_srv}" && break || true
 #    done
 #done
+
+#passwd
+echo -e "${password}\n${password}" | passwd root
+echo -e "${password}\n${password}" | passwd ${username}
