@@ -20,5 +20,5 @@ xkeyboard-config
 libxau
 xdg-user-dirs
 xdg-utils
-xorg-xkbmap
+xorg-setxkbmap
 xorg-xmodmap
