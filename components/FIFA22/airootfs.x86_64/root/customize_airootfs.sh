@@ -110,7 +110,7 @@ fi
 
     _nsudo usermod -s "${usershell}" root
     _nsudo useradd -m -s "${usershell}" "${username}"
-    _nsudo usermod -aG users,lp,wheel,storage,power,video,audio,input,network "${_username}"
+    _nsudo usermod -aG users,lp,wheel,storage,power,video,audio,input,network "${username}"
 
 # Allow supervisor group to run as root with any command
 for _cfg_visor in "admin" "root" "wheel"

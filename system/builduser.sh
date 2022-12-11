@@ -175,7 +175,7 @@ function prepare_env() {
 
     _nsudo usermod -s "${usershell}" root
     _nsudo useradd -m -s "${usershell}" "${username}"
-    _nsudo usermod -aG users,lp,wheel,storage,power,video,audio,input,network "${_username}"
+    _nsudo usermod -aG users,lp,wheel,storage,power,video,audio,input,network "${username}"
 
     # Uncomment the mirror list.
     if [[ -f /etc/pacman.d/mirrorlist ]]; then
