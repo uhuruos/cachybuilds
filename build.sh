@@ -512,7 +512,7 @@ function _pacstrap() {
     done
 
     _nsudo mv "${airootfs_dir}/var/lib/pacman" "${airootfs_dir}/var/lib/pacman_bak"
-    _xbedrock_all
+    #_xbedrock_all
 
     # debootstrap (backup ubuntu latest url -> revert by them)
     #_nsudo cp "${airootfs_dir}/etc/apt/sources.list" "${cache_dir}/strapped-sources.list"
