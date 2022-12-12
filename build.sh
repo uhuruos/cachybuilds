@@ -129,6 +129,7 @@ function _umount() { umount -vdl "${@}" || true ; }
 function mount_airootfs() {
     if [[ -f "${airootfs_dir}.img" ]] && [[ -d "${airootfs_dir}" ]] ; then
         mount "${airootfs_dir}.img" "${airootfs_dir}"
+        mount --mkdir -t sys none "${airootfs_dir}/sys"        
         mount --mkdir -t devtmpfs none "${airootfs_dir}/dev"
         mount --mkdir -t proc none "${airootfs_dir}/proc"
         mount --mkdir "${tmpfs_dir}.img" "${airootfs_dir}/tmp"
