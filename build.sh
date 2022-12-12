@@ -233,7 +233,7 @@ function _xbedrock_Gentoo_CLANG() { local __ver_Gentoo_CLANG=$( wget -O - "https
                --exclude=^./usr/x86_64-gentoo-linux-musl/bin/* --exclude=^./usr/x86_64-gentoo-linux-musl/lib/* \
                --exclude=^./usr/lib/clang/* --exclude=^./var/tmp/* --exclude=^./var/cache/edb/* --exclude=^./var/db/pkg/* || true
 
-    _nsudo find "${airootfs_dir}" -type f -name ".keep" | xargs -I{} rm -rf {} || true
+    _nsudo find "${airootfs_dir}" -type f -name ".keep" -delete 2> /dev/null
 
     if [[ ! -d "${airootfs_dir}/var/db/repos" ]]; then
         echo -e "    [x] Merging Gentoo (clang) was failed. \n" && false
@@ -266,7 +266,7 @@ function _xbedrock_Gentoo_GCC() { local __ver_Gentoo_GCC=$( wget -O - "https://f
                --exclude=^./usr/x86_64-pc-linux-gnu/bin/* --exclude=^./usr/x86_64-pc-linux-gnu/lib/* \
                --exclude=^./usr/lib/gcc/* --exclude=^./var/tmp/* --exclude=^./var/cache/edb/* --exclude=^./var/db/pkg/* || true
 
-    _nsudo find "${airootfs_dir}" -type f -name ".keep" | xargs -I{} rm -rf {} || true
+    _nsudo find "${airootfs_dir}" -type f -name ".keep" -delete 2> /dev/null
 
     if [[ ! -d "${airootfs_dir}/var/db/repos" ]]; then
         echo -e "    [x] Merging Gentoo Stage3 (gcc) was failed. \n" && false
