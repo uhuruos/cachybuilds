@@ -1,6 +1,8 @@
+lib32-libgpg-error
 libgpg-error
+lib32-libgcrypt
 libgcrypt
 fakeroot
 jq
 mc
-cachyos/pacman
+pacman

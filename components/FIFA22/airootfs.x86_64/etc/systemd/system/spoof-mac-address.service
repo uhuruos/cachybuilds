@@ -4,7 +4,7 @@ Wants=network-pre.target
 Before=network-pre.target
 
 [Service]
-ExecStart=/usr/lib/obscurix/spoof-mac-address
+ExecStart=/usr/lib/spoof-mac-address
 
 [Install]
 WantedBy=multi-user.target

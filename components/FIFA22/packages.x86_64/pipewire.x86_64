@@ -1,5 +1,7 @@
 sdl2
+lib32-gst-plugins-base-libs
 gst-plugins-base-libs
+lib32-v4l-utils
 v4l-utils
 vmaf
 soundtouch
@@ -9,11 +11,13 @@ lib32-libsamplerate
 libsamplerate
 lib32-alsa-lib
 alsa-lib
+lib32-alsa-plugins
+alsa-plugins
 alsa-firmware
 alsa-utils
 alsa-oss
 sof-firmware
-libdecor
+lib32-libpulse
 libpulse
 pipewire
 pipewire-pulse

@@ -9,9 +9,13 @@ gdbm
 expat
 lib32-harfbuzz
 harfbuzz
+lib32-libtasn1
 libtasn1
+lib32-libunwind
 libunwind
+lib32-libffi
 libffi
+lib32-libunistring
 libunistring
 mpfr
 libc++
@@ -26,6 +30,7 @@ lib32-libltdl
 libltdl
 lib32-gcc-libs
 gcc-libs
+lib32-ncurses
 ncurses
 readline
 tcl

@@ -4,7 +4,7 @@ Documentation=https://tails.boum.org/contribute/design/
 
 [Service]
 Type=simple
-ExecStart=python /usr/lib/onion-grater
+ExecStart=python /usr/lib/onion-greeter
 
 [Install]
 WantedBy=multi-user.target

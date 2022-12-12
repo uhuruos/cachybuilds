@@ -34,3 +34,4 @@ usb_modeswitch
 squashfs-tools
 os-prober
 mkinitcpio
+mkinitcpio-busybox

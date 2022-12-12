@@ -8,14 +8,12 @@ xfce4-session
 xfce4-settings
 xfce4-terminal
 xfce4-power-manager
+xfconf
 xfdesktop
 xfwm4
 xfwm4-themes
-thunar-archive-plugin
-thunar-media-tags-plugin
-xfce4-clipman-plugin
-xfce4-pulseaudio-plugin
 volumeicon
 thunar
+thunar-archive-plugin
+thunar-media-tags-plugin
 thunar-volman
-xfce4-terminal

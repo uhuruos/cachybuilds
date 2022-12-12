@@ -16,13 +16,8 @@ nyx
 tcpdump
 nmap
 wireshark-cli
-
-#-- port scanner --#
-nmap
-masscan
-rustscan
+remmina
 
 #-- tunneling tools --#
 chisel
 sshuttle
-#netsh

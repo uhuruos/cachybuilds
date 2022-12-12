@@ -2,6 +2,8 @@ audit
 pam
 keyutils
 krb5
+lib32-gnutls
+gnutls
 xmlsec
 nspr
 nss

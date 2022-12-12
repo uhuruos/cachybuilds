@@ -1,4 +1,5 @@
 libsasl
+lib32-libldap
 libldap
 libmtp
 gvfs

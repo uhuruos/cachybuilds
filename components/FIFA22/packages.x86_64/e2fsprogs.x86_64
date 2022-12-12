@@ -5,6 +5,7 @@ jfsutils
 xfsprogs
 reiserfsprogs
 btrfs-progs
+nfs-utils
 nilfs-utils
 f2fs-tools
 gptfdisk

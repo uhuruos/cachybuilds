@@ -178,7 +178,7 @@ _nsudo systemctl unmask systemd-resolved
 ###_nsudo systemctl enable modprobe || false
 _nsudo systemctl enable ldconfig || false
 #-- DBus
-###_nsudo systemctl enable dbus || false
+_nsudo systemctl enable dbus || false
 ###_nsudo systemctl enable dbus-broker || false
 #-- polkit, udev
 _nsudo systemctl enable polkit || false
@@ -244,24 +244,17 @@ _nsudo systemctl mask tor || false
 
 # Enable zeronet
 if [[ -d /usr/lib/start-zeronet ]]; then
-    _safe_systemctl enable zeronet.service
-    chmod +x /usr/lib/start-zeronet
     usermod -aG tor zeronet
-fi
-
-if [[ -d /usr/lib/obscurix ]]; then
-    chmod +x /usr/lib/obscurix/secure-time-sync || false
-    _nsudo systemctl enable secure-time-sync || false
-    chmod +x /usr/lib/obscurix/spoof-mac-address || false
+    chmod +x /usr/lib/obscurix/spoof-mac-address
     _nsudo systemctl enable spoof-mac-address || false
+    chmod +x /usr/lib/start-zeronet
+    _nsudo systemctl enable zeronet || false
+    chmod +x /usr/lib/onion-greeter || false
+fi
 fi
 
 if [[ -f "/usr/bin/kloak" ]]; then
     _nsudo systemctl enable kloak || false
-fi
-
-if [[ -f "/usr/lib/onion-greeter" ]]; then
-    chmod +x /usr/lib/onion-greeter || false
 fi
 
 #-- Tweaks
@@ -292,11 +285,14 @@ fi
 # ??registring for XDMCP
 #_nsudo systemctl enable xdm || false
 
+# LightDM
+_nsudo systemctl enable lightdm || false
+
 # Snap
-#_safe_systemctl enable snapd.apparmor || false
-#_safe_systemctl enable apparmor || false
-#_safe_systemctl enable snapd.socket || false
-#_safe_systemctl enable snapd || false
+#_nsudo systemctl enable snapd.apparmor || false
+#_nsudo systemctl enable apparmor || false
+#_nsudo systemctl enable snapd.socket || false
+#_nsudo systemctl enable snapd || false
 
 # disable light-locker on live
 for _cfg_lightlocker in $(find "/home/${username}/.config" -type f | grep config | xargs -n1 realpath)

@@ -1,5 +1,4 @@
 libmicrodns
-qt5ct
 libraw1394
 libavc1394
 libcdio
@@ -12,6 +11,7 @@ libxv
 gsm
 zvbi
 libmpeg2
+lib32-mpg123
 mpg123
 xvidcore
 libvpx
@@ -22,9 +22,11 @@ flac
 libsoxr
 libmfx
 libiec61883
+lib32-libva
 libva
 libx264
 x264
+x265
 libwebp
 libgl
 opus
