@@ -198,7 +198,7 @@ function for_component() { local component
     for component in "${components[@]}"; do eval "${@//"{}"/${component}}"; done; }
 
 # Unpack Void
-function _xbedrock_Void() { local __verVoid='20210930'
+function _xbedrock_Void() { local __verVoid='20221001'
 
     wget -O "${cache_dir}/void.tar.xz" "https://mirrors.dotsrc.org/voidlinux/live/current/void-x86_64-ROOTFS-${__verVoid}.tar.xz" || false
 
