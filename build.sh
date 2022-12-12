@@ -128,7 +128,7 @@ function _umount() { umount -vdl "${@}" || true ; }
 # Mount helper Usage: mount <source> <target>
 function mount_airootfs() {
     if [[ -f "${airootfs_dir}.img" ]] && [[ -d "${airootfs_dir}" ]] ; then
-        mount "${airootfs_dir}.img" "${airootfs_dir}"    
+        mount "${airootfs_dir}.img" "${airootfs_dir}"
         mount --mkdir -t devtmpfs none "${airootfs_dir}/dev"
         mount --mkdir -t sysfs none "${airootfs_dir}/sys"
         mount --mkdir -t proc none "${airootfs_dir}/proc"
@@ -233,7 +233,7 @@ function _xbedrock_Gentoo_CLANG() { local __ver_Gentoo_CLANG=$( wget -O - "https
                --exclude=^./usr/x86_64-gentoo-linux-musl/bin/* --exclude=^./usr/x86_64-gentoo-linux-musl/lib/* \
                --exclude=^./usr/lib/clang/* --exclude=^./var/tmp/* --exclude=^./var/cache/edb/* --exclude=^./var/db/pkg/* || true
 
-    _nsudo find "${airootfs_dir}" -type f -name .keep -delete || true
+    _nsudo find "${airootfs_dir}" -type f -name ".keep" | xargs -I{} rm -rf {} || true
 
     if [[ ! -d "${airootfs_dir}/var/db/repos" ]]; then
         echo -e "    [x] Merging Gentoo (clang) was failed. \n" && false
@@ -266,7 +266,7 @@ function _xbedrock_Gentoo_GCC() { local __ver_Gentoo_GCC=$( wget -O - "https://f
                --exclude=^./usr/x86_64-pc-linux-gnu/bin/* --exclude=^./usr/x86_64-pc-linux-gnu/lib/* \
                --exclude=^./usr/lib/gcc/* --exclude=^./var/tmp/* --exclude=^./var/cache/edb/* --exclude=^./var/db/pkg/* || true
 
-    _nsudo find "${airootfs_dir}" -type f -name .keep -delete || true
+    _nsudo find "${airootfs_dir}" -type f -name ".keep" | xargs -I{} rm -rf {} || true
 
     if [[ ! -d "${airootfs_dir}/var/db/repos" ]]; then
         echo -e "    [x] Merging Gentoo Stage3 (gcc) was failed. \n" && false
